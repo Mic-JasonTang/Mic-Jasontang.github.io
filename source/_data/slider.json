@@ -1,17 +1,17 @@
 [{			  
-    "image": "https://raw.githubusercontent.com/Mic-JasonTang/Mic-Jasontang.github.io/master/css/images/coloreggs.jpg",
+    "image": "https://mic-jasontang.github.io/imgs/coloreggs.jpg",
     "align": "center",
     "title": "computer vision",
     "subtitle": "whole world",
 	"link": "/"
 },{			  
-    "image": "https://raw.githubusercontent.com/Mic-JasonTang/Mic-Jasontang.github.io/master/css/images/fantasy.jpg",
+    "image": "https://mic-jasontang.github.io/imgs/wall.png",
     "align": "left",
     "title": "import tensorflow as tf",
     "subtitle": "sess.run(hello)",
 	"link": null
 }, {
-    "image": "https://raw.githubusercontent.com/Mic-JasonTang/Mic-Jasontang.github.io/master/css/images/pythoner.png",
+    "image": "https://mic-jasontang.github.io/imgs/pythoner.png",
     "align": "right",
     "title": "import __helloworld__",
     "subtitle": ">>> Hello World",

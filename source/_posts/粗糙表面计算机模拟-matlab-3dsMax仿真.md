@@ -46,10 +46,22 @@ tags:
 	axis square
 	
 # 实验结果 #
-![matlab仿真结果128*128](http://mic-jasontang.github.io/imgs/surface_roughness.png)
-![matlab仿真结果256*256](http://mic-jasontang.github.io/imgs/surface_roughness_256.png)
-# 仿真结果 #
-采用目标聚光灯和目标相机，相机采用50mm焦距拍摄，模拟效果还算理想。
+matlab仿真结果128*128
 
+![matlab仿真结果128*128](https://mic-jasontang.github.io/imgs/surf_roughness_128.png)
+
+matlab仿真结果256*256
+
+![matlab仿真结果256*256](https://mic-jasontang.github.io/imgs/surf_roughness_256.png)
+# 仿真结果 #
+采用目标聚光灯和目标相机，相机采用50mm焦距拍摄，金属材质，高光级别106，光泽度68，模拟效果还算理想。
+
+3dMax仿真结果
+
+![3dMax仿真结果](https://mic-jasontang.github.io/imgs/50mm-106-68.png)
+
+3dMax仿真之后进行试验的结果
+
+![3dMax仿真之后进行试验的结果](https://mic-jasontang.github.io/imgs/50mm-106-68-ans.png)
 # 参考文献 #
 [1]陈辉,胡元中,王慧,王文中.粗糙表面计算机模拟[J].润滑与密封,2006(10):52-55+59.
