@@ -2,15 +2,18 @@
 title: 关于k阶矩的理解
 date: 2018-03-22 21:44:18
 categories:
-- 技术文章
+- 数学基础
 - 随机过程
 tags:
 - k阶矩
 - 随机过程
+- 偏度
+- 峰度
 ---
 
 # k阶原点矩、2阶矩、3阶矩该怎么理解？ #
 
+下面使用语言描述和代码来讲解。
 <!-- more -->
 
 > 阶矩是用来描述随机变量的概率分布的特性.
@@ -30,7 +33,7 @@ tags:
 
     import numpy as np
 	from scipy import stats
-	import math
+	
 	
 	def calc_statistics(x):
 	n = x.shape[0]   #样本个数

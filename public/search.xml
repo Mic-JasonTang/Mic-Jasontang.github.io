@@ -5,11 +5,11 @@
     <entry>
       <title>关于k阶矩的理解</title>
       <link href="/2018/03/22/%E5%85%B3%E4%BA%8Ek%E9%98%B6%E7%9F%A9%E7%9A%84%E7%90%86%E8%A7%A3/"/>
-      <content type="html"><![CDATA[<h1 id="k阶原点矩、2阶矩、3阶矩该怎么理解？"><a href="#k阶原点矩、2阶矩、3阶矩该怎么理解？" class="headerlink" title="k阶原点矩、2阶矩、3阶矩该怎么理解？"></a>k阶原点矩、2阶矩、3阶矩该怎么理解？</h1><a id="more"></a><blockquote><p>阶矩是用来描述随机变量的概率分布的特性.</p></blockquote><blockquote><p>一阶矩指的是随机变量的平均值,即期望值</p><p>二阶矩指的是随机变量的方差</p><p>三阶矩指的是随机变量的偏度</p><p>四阶矩指的是随机变量的峰度</p></blockquote><blockquote><p>因此通过计算矩,则可以得出随机变量的分布形状</p></blockquote><h1 id="代码实现"><a href="#代码实现" class="headerlink" title="代码实现"></a>代码实现</h1><p>使用Python2.0实现</p><pre><code>import numpy as npfrom scipy import statsimport mathdef calc_statistics(x):n = x.shape[0]   #样本个数# 手动计算m = 0m2 = 0m3 = 0m4 = 0for t in x:    m += t    m2 += t*t    m3 += t**3    m4 += t**4m /= nm2 /= nm3 /= nm4 /= nmu = m    # 一阶矩sigma = np.sqrt(m2 - mu*mu)   # 二阶矩skew = (m3 - 3*mu*m2 + 2*mu**3) / sigma**3    # 三阶矩（偏度）kurtosis = (m4 - 4*mu*m3 + 6*mu*mu*m2 - 4*mu**3*mu + mu**4) / sigma**4 - 3    # 四阶矩（峰度）print &quot;手动计算均值、标准差、偏度、峰度：&quot;, mu, sigma, skew, kurtosis# 使用系统函数验证mu = np.mean(x, axis=0)sigma = np.std(x, axis=0)skew = stats.skew(x)kurtosis = stats.kurtosis(x)return mu, sigma, skew, kurtosisif __name__ == &apos;__main__&apos;:d = np.random.randn(10000)print dprint d.shapemu, sigma, skew, kurtosis = calc_statistics(d)print &quot;函数库计算均值、标准差、偏度、峰度：&quot;, mu, sigma, skew, kurtosis</code></pre><p>执行结果:</p><blockquote><p>[-0.42751577  0.36230961  0.37899409 …,  0.09176115 -1.38955563<br> -0.57570736]</p></blockquote><blockquote><p>(10000L,)</p></blockquote><blockquote><p>手动计算均值、标准差、偏度、峰度： -0.00189350820374 0.995018151945 -0.00589521484127 -0.0590604043446</p></blockquote><blockquote><p>函数库计算均值、标准差、偏度、峰度： -0.00189350820374 0.995018151945 -0.00589521484127 -0.0590604043446</p></blockquote>]]></content>
+      <content type="html"><![CDATA[<h1 id="k阶原点矩、2阶矩、3阶矩该怎么理解？"><a href="#k阶原点矩、2阶矩、3阶矩该怎么理解？" class="headerlink" title="k阶原点矩、2阶矩、3阶矩该怎么理解？"></a>k阶原点矩、2阶矩、3阶矩该怎么理解？</h1><p>下面使用语言描述和代码来讲解。<br><a id="more"></a></p><blockquote><p>阶矩是用来描述随机变量的概率分布的特性.</p></blockquote><blockquote><p>一阶矩指的是随机变量的平均值,即期望值</p><p>二阶矩指的是随机变量的方差</p><p>三阶矩指的是随机变量的偏度</p><p>四阶矩指的是随机变量的峰度</p></blockquote><blockquote><p>因此通过计算矩,则可以得出随机变量的分布形状</p></blockquote><h1 id="代码实现"><a href="#代码实现" class="headerlink" title="代码实现"></a>代码实现</h1><p>使用Python2.0实现</p><pre><code>import numpy as npfrom scipy import statsdef calc_statistics(x):n = x.shape[0]   #样本个数# 手动计算m = 0m2 = 0m3 = 0m4 = 0for t in x:    m += t    m2 += t*t    m3 += t**3    m4 += t**4m /= nm2 /= nm3 /= nm4 /= nmu = m    # 一阶矩sigma = np.sqrt(m2 - mu*mu)   # 二阶矩skew = (m3 - 3*mu*m2 + 2*mu**3) / sigma**3    # 三阶矩（偏度）kurtosis = (m4 - 4*mu*m3 + 6*mu*mu*m2 - 4*mu**3*mu + mu**4) / sigma**4 - 3    # 四阶矩（峰度）print &quot;手动计算均值、标准差、偏度、峰度：&quot;, mu, sigma, skew, kurtosis# 使用系统函数验证mu = np.mean(x, axis=0)sigma = np.std(x, axis=0)skew = stats.skew(x)kurtosis = stats.kurtosis(x)return mu, sigma, skew, kurtosisif __name__ == &apos;__main__&apos;:d = np.random.randn(10000)print dprint d.shapemu, sigma, skew, kurtosis = calc_statistics(d)print &quot;函数库计算均值、标准差、偏度、峰度：&quot;, mu, sigma, skew, kurtosis</code></pre><p>执行结果:</p><blockquote><p>[-0.42751577  0.36230961  0.37899409 …,  0.09176115 -1.38955563<br> -0.57570736]</p></blockquote><blockquote><p>(10000L,)</p></blockquote><blockquote><p>手动计算均值、标准差、偏度、峰度： -0.00189350820374 0.995018151945 -0.00589521484127 -0.0590604043446</p></blockquote><blockquote><p>函数库计算均值、标准差、偏度、峰度： -0.00189350820374 0.995018151945 -0.00589521484127 -0.0590604043446</p></blockquote>]]></content>
       
       <categories>
           
-          <category> 技术文章 </category>
+          <category> 数学基础 </category>
           
           <category> 随机过程 </category>
           
@@ -22,6 +22,10 @@
             
             <tag> 随机过程 </tag>
             
+            <tag> 偏度 </tag>
+            
+            <tag> 峰度 </tag>
+            
         </tags>
       
     </entry>
@@ -29,7 +33,7 @@
     <entry>
       <title>Hexo多电脑同步写作</title>
       <link href="/2018/03/22/Hexo%E5%A4%9A%E7%94%B5%E8%84%91%E5%90%8C%E6%AD%A5%E5%86%99%E4%BD%9C/"/>
-      <content type="html"><![CDATA[<p>利用Hexo安装完博客之后，如何实现多电脑写作捏？下面分几步来说明</p><h1 id="1-上传文件到仓库"><a href="#1-上传文件到仓库" class="headerlink" title="1.上传文件到仓库"></a>1.上传文件到仓库</h1><p>前提是已经安装好Git客户端。这个应该在你安装博客的时候就已经安装好了吧。不会的话，百度下下载链接安装就好。<br>首先你要明白，你创建的博客通过<code>hexo d</code>命令部署到github之后,和你的本地博客根目录下的<code>.deploy_git</code>文件夹中的目录结构是一样的，所以，这只能算是个web工程，若要想实现多客户端写作的话，需要通过下面的步骤。</p><a id="more"></a><ol><li>首先在你Github账户上新建一个仓库，例如名为<code>hexo-blog</code></li><li>将本地博客根目录下的5个文件分别copy到一个新文件夹(例：hexo-blog)里面。<ol><li>scaffolds</li><li>source</li><li>themes（记得删除你下载主题的.git目录，它通常是隐藏的，需要取消隐藏之后删除，或者使用Git客户端来删除，<code>ls -a &amp;&amp; rm .git</code>）</li><li>_config.yml</li><li>package.json</li></ol></li><li>在hexo-blog目录中执行<ol><li><code>git init</code></li><li><code>git add .</code></li><li><code>git remote add origin git@github@你github用户名/hexo-blog(换成你仓库名).github.io.git</code>（使用你新建的仓库的SSH地址）</li><li>git push origin hexo</li></ol></li><li>在第2步中，起始可以直接执行第3步的命令，也即可以不用复制那5个文件到新的目录中，只是因为那5个目录是必须的，其他的都是次要的。</li></ol><h1 id="2-下载文件"><a href="#2-下载文件" class="headerlink" title="2. 下载文件"></a>2. 下载文件</h1><p>上一步已经将你本地的博客托管到了github仓库中，接下来需要在你另一台需要写博客的电脑中，安装Node.js（这个自行百度吧，直接next安装即可）然后执行clone命令即可。</p><ol><li>进入到你放置博客的目录中，然后执行<code>git clone git@github@你github用户名/hexo-blog(换成你仓库名).github.io.git</code></li><li><code>cd hexo-blog</code>进入此仓库目录中</li><li>执行<code>npm install</code>安装所需组件</li><li>使用<code>hexo g &amp;&amp; hexo s -p 8080</code> 在本地打开浏览器输入<code>localhost:8080</code> 查看与在线的博客是否一致。</li><li>使用<code>hexo new &quot;page name&quot;</code>写一篇博客吧,写完记得执行一下命令来完成同步<ol><li><code>git add .</code></li><li><code>git commit -m &#39;add a new page&#39;</code></li><li><code>git push origin master</code></li></ol></li><li>此时就可以在你原先电脑上执行<code>git pull origin master</code>来完成同步了。 </li></ol><h1 id="留言"><a href="#留言" class="headerlink" title="留言"></a>留言</h1><p>如果还有不懂请在下面留言，我会及时回复。</p>]]></content>
+      <content type="html"><![CDATA[<p>利用Hexo安装完博客之后，如何实现多电脑写作捏？下面分几步来说明</p><h1 id="1-上传文件到仓库"><a href="#1-上传文件到仓库" class="headerlink" title="1.上传文件到仓库"></a>1.上传文件到仓库</h1><p>前提是已经安装好Git客户端。这个应该在你安装博客的时候就已经安装好了吧。不会的话，百度下下载链接安装就好。<br>首先你要明白，你创建的博客通过<code>hexo d</code>命令部署到github之后,和你的本地博客根目录下的<code>.deploy_git</code>文件夹中的目录结构是一样的，所以，这只能算是个web工程，若要想实现多客户端写作的话，需要通过下面的步骤。</p><a id="more"></a><ol><li>首先在你Github账户上新建一个仓库，例如名为<code>hexo-blog</code></li><li>将本地博客根目录下的5个文件分别copy到一个新文件夹(例：hexo-blog)里面。<ol><li>scaffolds</li><li>source</li><li>themes（记得删除你下载主题的.git目录，它通常是隐藏的，需要取消隐藏之后删除，或者使用Git客户端来删除，<code>ls -a &amp;&amp; rm .git</code>）</li><li>_config.yml</li><li>package.json</li></ol></li><li>在hexo-blog目录中执行<ol><li><code>git init</code></li><li><code>git add .</code></li><li><code>git remote add origin git@github@你github用户名/hexo-blog(换成你仓库名).github.io.git</code>（使用你新建的仓库的SSH地址）</li><li><code>git commit -m &#39;blog source bakcup&#39;</code>(commit之后才能创建分支)</li><li><code>git branch hexo</code>创建一个hexo分支</li><li><code>git checkout hexo</code>切换到hexo分支</li><li><code>git push origin hexo</code></li></ol></li><li>在第2步中，起始可以直接执行第3步的命令，也即可以不用复制那5个文件到新的目录中，只是因为那5个目录是必须的，其他的都是次要的。</li></ol><h1 id="2-下载文件"><a href="#2-下载文件" class="headerlink" title="2. 下载文件"></a>2. 下载文件</h1><p>上一步已经将你本地的博客托管到了github仓库中，接下来需要在你另一台需要写博客的电脑中，安装Node.js（这个自行百度吧，直接next安装即可）然后执行clone命令即可。</p><ol><li>进入到你放置博客的目录中，然后执行<code>git clone -b hexo git@github@你github用户名/hexo-blog(换成你仓库名).github.io.git</code></li><li><code>cd hexo-blog</code>进入此仓库目录中</li><li>执行<code>npm install</code>安装所需组件</li><li>使用<code>hexo g &amp;&amp; hexo s -p 8080</code> 在本地打开浏览器输入<code>localhost:8080</code> 查看与在线的博客是否一致。</li><li>使用<code>hexo new &quot;page name&quot;</code>新建一片博客，写完一篇博客，然后部署<code>hexo clean &amp;&amp; hexo g &amp;&amp; hexo d</code>,再执行以下命令来完成同步<ol><li><code>git add .</code></li><li><code>git commit -m &#39;add a new page&#39;</code></li><li><code>git push origin hexo</code></li></ol></li><li>此时就可以在你原先电脑上执行<code>git pull origin hexo</code>来完成同步了。 </li></ol><h1 id="留言"><a href="#留言" class="headerlink" title="留言"></a>留言</h1><p>如果还有不懂请在下面留言，我会及时回复。</p>]]></content>
       
       <categories>
           
@@ -90,9 +94,9 @@
       
         <tags>
             
-            <tag> 图像处理 </tag>
-            
             <tag> python </tag>
+            
+            <tag> 图像处理 </tag>
             
             <tag> 直方图均衡化 </tag>
             
@@ -136,15 +140,15 @@
   
     
     <entry>
-      <title>关于</title>
-      <link href="/about/index.html"/>
-      <content type="html"><![CDATA[<p>大家好，我是tech.radish。欢迎来到我的个人技术博客。</p>]]></content>
-    </entry>
-    
-    <entry>
       <title>读书</title>
       <link href="/reading/index.html"/>
       <content type="html"><![CDATA[<h1 id="我想读"><a href="#我想读" class="headerlink" title="我想读"></a>我想读</h1><p>书籍1</p><hr><p>书籍2</p>]]></content>
+    </entry>
+    
+    <entry>
+      <title>关于</title>
+      <link href="/about/index.html"/>
+      <content type="html"><![CDATA[<p>大家好，我是tech.radish。欢迎来到我的个人技术博客。</p>]]></content>
     </entry>
     
   

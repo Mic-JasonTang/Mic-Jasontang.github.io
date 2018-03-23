@@ -27,21 +27,24 @@ tags:
 	1.  `git init`
 	2.  `git add .`
 	3.  `git remote add origin git@github@你github用户名/hexo-blog(换成你仓库名).github.io.git`（使用你新建的仓库的SSH地址）
-	4.  git push origin hexo
+	4.  `git commit -m 'blog source bakcup'`(commit之后才能创建分支)
+	5.  `git branch hexo`创建一个hexo分支
+	6.  `git checkout hexo`切换到hexo分支
+	5.  `git push origin hexo`
 4. 在第2步中，起始可以直接执行第3步的命令，也即可以不用复制那5个文件到新的目录中，只是因为那5个目录是必须的，其他的都是次要的。
 
 # 2. 下载文件 #
 上一步已经将你本地的博客托管到了github仓库中，接下来需要在你另一台需要写博客的电脑中，安装Node.js（这个自行百度吧，直接next安装即可）然后执行clone命令即可。
 
-1. 进入到你放置博客的目录中，然后执行`git clone git@github@你github用户名/hexo-blog(换成你仓库名).github.io.git`
+1. 进入到你放置博客的目录中，然后执行`git clone -b hexo git@github@你github用户名/hexo-blog(换成你仓库名).github.io.git`
 2. `cd hexo-blog`进入此仓库目录中
 3. 执行`npm install`安装所需组件
 4. 使用`hexo g && hexo s -p 8080` 在本地打开浏览器输入`localhost:8080` 查看与在线的博客是否一致。
-5. 使用`hexo new "page name"`写一篇博客吧,写完记得执行一下命令来完成同步
+5. 使用`hexo new "page name"`新建一片博客，写完一篇博客，然后部署`hexo clean && hexo g && hexo d`,再执行以下命令来完成同步
 	1. `git add .`
 	2. `git commit -m 'add a new page'`
-	3. `git push origin master`
-6. 此时就可以在你原先电脑上执行`git pull origin master`来完成同步了。 
+	3. `git push origin hexo`
+6. 此时就可以在你原先电脑上执行`git pull origin hexo`来完成同步了。 
 
 # 留言 #
 如果还有不懂请在下面留言，我会及时回复。

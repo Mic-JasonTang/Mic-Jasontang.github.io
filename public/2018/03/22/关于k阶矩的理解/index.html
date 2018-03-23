@@ -10,7 +10,7 @@
     <title>关于k阶矩的理解 | tech.radish</title>
     <meta name="author" content="yang.tang">
     
-    <meta name="description" content="k阶原点矩、2阶矩、3阶矩该怎么理解？">
+    <meta name="description" content="k阶原点矩、2阶矩、3阶矩该怎么理解？下面使用语言描述和代码来讲解。">
     
     
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
@@ -172,15 +172,7 @@
 
             <li class="collapse-level-0" collapse-level="0">
                 <a class="no-padding" href="/categories/技术文章/">
-                    技术文章 <span class="right">2 篇</span></a>
-                </a>
-            </li>
-
-        
-
-            <li class="collapse-level-1" collapse-level="1">
-                <a class="no-padding" href="/categories/技术文章/随机过程/">
-                    随机过程 <span class="right">1 篇</span></a>
+                    技术文章 <span class="right">1 篇</span></a>
                 </a>
             </li>
 
@@ -189,22 +181,6 @@
             <li class="collapse-level-1" collapse-level="1">
                 <a class="no-padding" href="/categories/技术文章/博客搭建/">
                     博客搭建 <span class="right">1 篇</span></a>
-                </a>
-            </li>
-
-        
-
-            <li class="collapse-level-0" collapse-level="0">
-                <a class="no-padding" href="/categories/tensorflow学习/">
-                    tensorflow学习 <span class="right">1 篇</span></a>
-                </a>
-            </li>
-
-        
-
-            <li class="collapse-level-1" collapse-level="1">
-                <a class="no-padding" href="/categories/tensorflow学习/tensorflow-Demo/">
-                    tensorflow-Demo <span class="right">1 篇</span></a>
                 </a>
             </li>
 
@@ -221,6 +197,38 @@
             <li class="collapse-level-1" collapse-level="1">
                 <a class="no-padding" href="/categories/图像处理/图像增强/">
                     图像增强 <span class="right">2 篇</span></a>
+                </a>
+            </li>
+
+        
+
+            <li class="collapse-level-0" collapse-level="0">
+                <a class="no-padding" href="/categories/数学基础/">
+                    数学基础 <span class="right">1 篇</span></a>
+                </a>
+            </li>
+
+        
+
+            <li class="collapse-level-1" collapse-level="1">
+                <a class="no-padding" href="/categories/数学基础/随机过程/">
+                    随机过程 <span class="right">1 篇</span></a>
+                </a>
+            </li>
+
+        
+
+            <li class="collapse-level-0" collapse-level="0">
+                <a class="no-padding" href="/categories/tensorflow学习/">
+                    tensorflow学习 <span class="right">1 篇</span></a>
+                </a>
+            </li>
+
+        
+
+            <li class="collapse-level-1" collapse-level="1">
+                <a class="no-padding" href="/categories/tensorflow学习/tensorflow-Demo/">
+                    tensorflow-Demo <span class="right">1 篇</span></a>
                 </a>
             </li>
 
@@ -256,7 +264,7 @@
             
     
     
-    <a class="breadcrumb" href="/categories/技术文章/">技术文章</a><a class="breadcrumb" href="/categories/技术文章/随机过程/">随机过程</a>
+    <a class="breadcrumb" href="/categories/数学基础/">数学基础</a><a class="breadcrumb" href="/categories/数学基础/随机过程/">随机过程</a>
 
 
         
@@ -295,6 +303,10 @@
         
             <a href="/tags/随机过程/" class="chip pink lighten-1">随机过程</a>
         
+            <a href="/tags/偏度/" class="chip pink lighten-1">偏度</a>
+        
+            <a href="/tags/峰度/" class="chip pink lighten-1">峰度</a>
+        
     </div>
 
 
@@ -304,7 +316,7 @@
 
 
             <div class="entry green-link-context">
-                <h1 id="k阶原点矩、2阶矩、3阶矩该怎么理解？"><a href="#k阶原点矩、2阶矩、3阶矩该怎么理解？" class="headerlink" title="k阶原点矩、2阶矩、3阶矩该怎么理解？"></a>k阶原点矩、2阶矩、3阶矩该怎么理解？</h1><a id="more"></a>
+                <h1 id="k阶原点矩、2阶矩、3阶矩该怎么理解？"><a href="#k阶原点矩、2阶矩、3阶矩该怎么理解？" class="headerlink" title="k阶原点矩、2阶矩、3阶矩该怎么理解？"></a>k阶原点矩、2阶矩、3阶矩该怎么理解？</h1><p>下面使用语言描述和代码来讲解。<br><a id="more"></a></p>
 <blockquote>
 <p>阶矩是用来描述随机变量的概率分布的特性.</p>
 </blockquote>
@@ -320,7 +332,7 @@
 <h1 id="代码实现"><a href="#代码实现" class="headerlink" title="代码实现"></a>代码实现</h1><p>使用Python2.0实现</p>
 <pre><code>import numpy as np
 from scipy import stats
-import math
+
 
 def calc_statistics(x):
 n = x.shape[0]   #样本个数
