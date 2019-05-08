@@ -79,7 +79,7 @@ theme: raytaylorism
 ## Docs: https://hexo.io/docs/deployment.html
 deploy:
   type: git
-  repo: git@github.com:Mic-JasonTang/Mic-Jasontang.github.io.git
+  repo: git@github.com:Mic-JasonTang/mic-Jasontang.github.io.git
   branch: master
   
 # search  
