@@ -1,0 +1,1253 @@
+<!DOCTYPE HTML>
+<html>
+<head><meta name="generator" content="Hexo 3.8.0">
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+
+    
+
+    <title>深度学习中的卷积和池化 | tech.radish</title>
+    <meta name="author" content="yang.tang">
+    
+    <meta name="description" content="1. Convolution
+卷积是什么？
+卷积在数学上用通俗的话来说就是输入矩阵与卷积核（卷积核也是矩阵）进行对应元素相乘并求和，所以一次卷积的结果的输出是一个数，最后对整个输入输入矩阵进行遍历，最终得到一个结果矩阵，下面通过一个动画使其更直观。">
+    
+    
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+    <meta property="og:title" content="深度学习中的卷积和池化">
+    <meta property="og:site_name" content="tech.radish">
+
+    
+    <meta property="og:image" content>
+    
+
+    <link rel="icon" type="image/png" href="/favicon.png">
+    <link rel="alternate" href="/atom.xml" title="tech.radish" type="application/atom+xml">
+    <link rel="stylesheet" href="/css/lib/materialize.min.css">
+    <link rel="stylesheet" href="/css/lib/font-awesome.min.css">
+    <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+
+    
+        <link rel="stylesheet" href="/css/lib/prettify-tomorrow-night-eighties.css" type="text/css">
+    
+    <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+</head>
+</html>
+
+<body>
+    <img src="/weixin_favicon.png" style="position: absolute; left: -9999px; opacity: 0; filter: alpha(opacity=0);">
+
+    <nav class="indigo">
+    <div class="nav-wrapper">
+        <a href="#" data-activates="main-menu" class="button-collapse">
+            <i class="fa fa-navicon"></i>
+        </a>
+        <div class>
+            <a href="/" class="brand-logo hide-on-med-and-down">tech.radish</a>
+            <ul class="right hide-on-med-and-down">
+                
+                    <li>
+                        <a class="menu-home " href="/">
+                            <i class="fa fa-home "></i>
+                            
+                            首页
+                        </a>
+                    </li>
+                
+                    <li>
+                        <a class="menu-archive " href="/archives">
+                            <i class="fa fa-archive "></i>
+                            
+                            归档
+                        </a>
+                    </li>
+                
+                    <li>
+                        <a class="menu-category category-menu" href="javascript:;" data-activates="category-menu">
+                            <i class="fa fa-bookmark "></i>
+                            
+                            分类
+                        </a>
+                    </li>
+                
+                    <li>
+                        <a class="menu-reading " href="/reading">
+                            <i class="fa fa-book "></i>
+                            
+                            读书
+                        </a>
+                    </li>
+                
+                    <li>
+                        <a class="menu-about " href="/about">
+                            <i class="fa fa-user "></i>
+                            
+                            关于
+                        </a>
+                    </li>
+                
+                    <li>
+                        <a class="menu-search modal-trigger " href="#search">
+                            <i class="fa fa-search "></i>
+                            
+                            搜索
+                        </a>
+                    </li>
+                
+            </ul>
+            <div>
+    <ul class="side-nav indigo darken-1" id="main-menu">
+        
+        <li class="side-user">
+            <div class="row">
+                <div class="col s4 no-padding">
+                    <img class="avatar-image circle responsive-img" src="https://mic-jasontang.github.io/imgs/avatar.jpg" alt="User Avatar">
+                </div>
+                <div class="info col s8 valign-wrapper no-padding">
+                    <div class="valign">
+                        <p class="name">tech.radish</p>
+                        <p class="desc">python/Java/ML/CV</p>
+                    </div>
+                </div>
+            </div>
+        </li>
+        
+
+        
+            <li class="no-padding">
+                <a class="waves-effect menu-home " href="/">
+                    <i class="fa fa-home "></i>
+                    
+                    首页
+                </a>
+            </li>
+        
+            <li class="no-padding">
+                <a class="waves-effect menu-archive " href="/archives">
+                    <i class="fa fa-archive "></i>
+                    
+                    归档
+                </a>
+            </li>
+        
+            <li class="no-padding">
+                <a class="waves-effect menu-category category-menu" href="javascript:;" data-activates="category-menu">
+                    <i class="fa fa-bookmark "></i>
+                    
+                    分类
+                </a>
+            </li>
+        
+            <li class="no-padding">
+                <a class="waves-effect menu-reading " href="/reading">
+                    <i class="fa fa-book "></i>
+                    
+                    读书
+                </a>
+            </li>
+        
+            <li class="no-padding">
+                <a class="waves-effect menu-about " href="/about">
+                    <i class="fa fa-user "></i>
+                    
+                    关于
+                </a>
+            </li>
+        
+            <li class="no-padding">
+                <a class="waves-effect menu-search modal-trigger " href="#search">
+                    <i class="fa fa-search "></i>
+                    
+                    搜索
+                </a>
+            </li>
+        
+    </ul>
+
+    <ul class="side-nav indigo darken-1" id="category-menu">
+    
+
+            
+
+            <li class="collapse-level-0" collapse-level="0">
+                <a class="no-padding" href="/categories/技术文章/">
+                    技术文章 <span class="right">1 篇</span></a>
+                
+            </li>
+
+        
+
+            <li class="collapse-level-1" collapse-level="1">
+                <a class="no-padding" href="/categories/技术文章/博客搭建/">
+                    博客搭建 <span class="right">1 篇</span></a>
+                
+            </li>
+
+        
+
+            <li class="collapse-level-0" collapse-level="0">
+                <a class="no-padding" href="/categories/基础算法/">
+                    基础算法 <span class="right">2 篇</span></a>
+                
+            </li>
+
+        
+
+            <li class="collapse-level-1" collapse-level="1">
+                <a class="no-padding" href="/categories/基础算法/树/">
+                    树 <span class="right">1 篇</span></a>
+                
+            </li>
+
+        
+
+            <li class="collapse-level-1" collapse-level="1">
+                <a class="no-padding" href="/categories/基础算法/字符串/">
+                    字符串 <span class="right">1 篇</span></a>
+                
+            </li>
+
+        
+
+            <li class="collapse-level-0" collapse-level="0">
+                <a class="no-padding" href="/categories/数学基础/">
+                    数学基础 <span class="right">1 篇</span></a>
+                
+            </li>
+
+        
+
+            <li class="collapse-level-1" collapse-level="1">
+                <a class="no-padding" href="/categories/数学基础/随机过程/">
+                    随机过程 <span class="right">1 篇</span></a>
+                
+            </li>
+
+        
+
+            <li class="collapse-level-0" collapse-level="0">
+                <a class="no-padding" href="/categories/图像处理/">
+                    图像处理 <span class="right">2 篇</span></a>
+                
+            </li>
+
+        
+
+            <li class="collapse-level-1" collapse-level="1">
+                <a class="no-padding" href="/categories/图像处理/图像增强/">
+                    图像增强 <span class="right">2 篇</span></a>
+                
+            </li>
+
+        
+
+            <li class="collapse-level-0" collapse-level="0">
+                <a class="no-padding" href="/categories/周总结/">
+                    周总结 <span class="right">7 篇</span></a>
+                
+            </li>
+
+        
+
+            <li class="collapse-level-0" collapse-level="0">
+                <a class="no-padding" href="/categories/研磨-粗糙度/">
+                    研磨-粗糙度 <span class="right">1 篇</span></a>
+                
+            </li>
+
+        
+
+            <li class="collapse-level-1" collapse-level="1">
+                <a class="no-padding" href="/categories/研磨-粗糙度/研磨表面仿真/">
+                    研磨表面仿真 <span class="right">1 篇</span></a>
+                
+            </li>
+
+        
+
+            <li class="collapse-level-0" collapse-level="0">
+                <a class="no-padding" href="/categories/tensorflow学习/">
+                    tensorflow学习 <span class="right">1 篇</span></a>
+                
+            </li>
+
+        
+
+            <li class="collapse-level-1" collapse-level="1">
+                <a class="no-padding" href="/categories/tensorflow学习/tensorflow-Demo/">
+                    tensorflow-Demo <span class="right">1 篇</span></a>
+                
+            </li>
+
+        
+
+            <li class="collapse-level-0" collapse-level="0">
+                <a class="no-padding" href="/categories/深度学习/">
+                    深度学习 <span class="right">1 篇</span></a>
+                
+            </li>
+
+        
+
+            <li class="collapse-level-1" collapse-level="1">
+                <a class="no-padding" href="/categories/深度学习/深度学习基础/">
+                    深度学习基础 <span class="right">1 篇</span></a>
+                
+            </li>
+
+        
+
+    </ul>
+</div>
+
+        </div>
+    </div>
+</nav>
+
+<div id="search" class="modal search-modal">
+    <div class="row">
+        <div class="input-field col s12">
+              <input id="search-input" type="text">
+              <label for="search-input">搜索</label>
+        </div>
+
+    </div>
+    <div id="search-result" class="search-result col s12">
+
+    </div>
+</div>
+
+
+    <main>
+        <div class="container main-container">
+    <nav class="page-nav hide-on-small-only">
+    <div class="nav-wrapper indigo">
+        <span class="breadcrumb">当前位置（分类目录）</span>
+        
+            
+    
+    
+    <a class="breadcrumb" href="/categories/深度学习/">深度学习</a><a class="breadcrumb" href="/categories/深度学习/深度学习基础/">深度学习基础</a>
+
+
+        
+
+        
+    </div>
+</nav>
+
+<article>
+    <div class="card">
+        <div class="card-content">
+            
+
+            <div class="article-title">
+                
+    
+        <h1>深度学习中的卷积和池化</h1>
+    
+
+
+            </div>
+            <time class="green-link-context" datetime="2018-06-21T13:05:19.000Z"><a href="/2018/06/21/深度学习中的卷积和池化/">2018-06-21</a></time>
+
+			<div style="float: right;color: #E91E63"> 
+                阅读次数: <span id="busuanzi_value_page_pv"></span>
+			</div>
+            <span id="busuanzi_container_page_pv" class="read-times-container">
+    <i class="fa fa-eye"></i>
+    <span id="busuanzi_value_page_pv"></span>
+</span>
+
+            
+    <div class="tags-row">
+        
+            <a href="/tags/tensorflow/" class="chip pink lighten-1">tensorflow</a>
+        
+            <a href="/tags/卷积/" class="chip pink lighten-1">卷积</a>
+        
+            <a href="/tags/池化/" class="chip pink lighten-1">池化</a>
+        
+            <a href="/tags/LeNet-5/" class="chip pink lighten-1">LeNet-5</a>
+        
+    </div>
+
+
+            <div class="toc green-link-context hide-on-med-and-down">
+    <ol class="section table-of-contents"><li class="section table-of-contents-item section table-of-contents-level-1"><a class="section table-of-contents-link" href="#1-Convolution"><span class="section table-of-contents-text">1. Convolution</span></a><ol class="section table-of-contents-child"><li class="section table-of-contents-item section table-of-contents-level-2"><a class="section table-of-contents-link" href="#1-1-unit-strides"><span class="section table-of-contents-text">1.1 unit strides</span></a><ol class="section table-of-contents-child"><li class="section table-of-contents-item section table-of-contents-level-3"><a class="section table-of-contents-link" href="#1-1-1-No-zero-padding-unit-strides"><span class="section table-of-contents-text">1.1.1  No zero padding, unit strides</span></a></li><li class="section table-of-contents-item section table-of-contents-level-3"><a class="section table-of-contents-link" href="#1-1-2-Zero-padding-unit-strides"><span class="section table-of-contents-text">1.1.2 Zero padding, unit strides</span></a><ol class="section table-of-contents-child"><li class="section table-of-contents-item section table-of-contents-level-4"><a class="section table-of-contents-link" href="#1-1-2-1-Zero-padding-unit-strides-Half-Same-padding"><span class="section table-of-contents-text">1.1.2.1 Zero padding, unit strides - Half(Same) padding</span></a></li><li class="section table-of-contents-item section table-of-contents-level-4"><a class="section table-of-contents-link" href="#1-1-2-2-Zero-padding-unit-strides-Full-padding"><span class="section table-of-contents-text">1.1.2.2 Zero padding, unit strides - Full padding</span></a></li></ol></li></ol></li><li class="section table-of-contents-item section table-of-contents-level-2"><a class="section table-of-contents-link" href="#1-2-Non-unit-strides"><span class="section table-of-contents-text">1.2 Non-unit strides</span></a><ol class="section table-of-contents-child"><li class="section table-of-contents-item section table-of-contents-level-3"><a class="section table-of-contents-link" href="#1-2-1-No-zero-padding-non-unit-strides"><span class="section table-of-contents-text">1.2.1 No zero padding, non-unit strides</span></a></li><li class="section table-of-contents-item section table-of-contents-level-3"><a class="section table-of-contents-link" href="#1-2-2-Zero-padding-non-unit-strides"><span class="section table-of-contents-text">1.2.2 Zero padding, non-unit strides</span></a></li></ol></li><li class="section table-of-contents-item section table-of-contents-level-2"><a class="section table-of-contents-link" href="#1-3-Convolution-as-a-matrix-operation"><span class="section table-of-contents-text">1.3 Convolution as a matrix operation</span></a></li></ol></li><li class="section table-of-contents-item section table-of-contents-level-1"><a class="section table-of-contents-link" href="#2-Pooling"><span class="section table-of-contents-text">2. Pooling</span></a><ol class="section table-of-contents-child"><li class="section table-of-contents-item section table-of-contents-level-2"><a class="section table-of-contents-link" href="#2-1-Average-Pooling"><span class="section table-of-contents-text">2.1 Average Pooling</span></a></li><li class="section table-of-contents-item section table-of-contents-level-2"><a class="section table-of-contents-link" href="#2-2-Max-Pooling"><span class="section table-of-contents-text">2.2 Max Pooling</span></a></li></ol></li><li class="section table-of-contents-item section table-of-contents-level-1"><a class="section table-of-contents-link" href="#3-3D-Conv"><span class="section table-of-contents-text">3. 3D-Conv</span></a></li><li class="section table-of-contents-item section table-of-contents-level-1"><a class="section table-of-contents-link" href="#4-LeNet-5"><span class="section table-of-contents-text">4. LeNet-5</span></a></li><li class="section table-of-contents-item section table-of-contents-level-1"><a class="section table-of-contents-link" href="#Bibliography"><span class="section table-of-contents-text">Bibliography</span></a></li><li class="section table-of-contents-item section table-of-contents-level-1"><a class="section table-of-contents-link" href="#Code"><span class="section table-of-contents-text">Code</span></a></li><li class="section table-of-contents-item section table-of-contents-level-1"><a class="section table-of-contents-link" href="#Bibliography-1"><span class="section table-of-contents-text">Bibliography</span></a></li></ol>
+</div>
+
+
+            <div class="entry green-link-context">
+                <h1 id="1-Convolution"><a href="#1-Convolution" class="headerlink" title="1. Convolution"></a>1. Convolution</h1><blockquote>
+<p>卷积是什么？</p>
+<p>卷积在数学上用通俗的话来说就是输入矩阵与卷积核（卷积核也是矩阵）进行对应元素相乘并求和，所以一次卷积的结果的输出是一个数，最后对整个输入输入矩阵进行遍历，最终得到一个结果矩阵，下面通过一个动画使其更直观。</p>
+</blockquote>
+<a id="more"></a>
+<ul>
+<li>卷积动画演示<ul>
+<li>卷积核<br><img src="https://mic-jasontang.github.io/imgs/conv-kernel.png" alt="卷积动画演示"></li>
+</ul>
+</li>
+</ul>
+<p><img src="https://mic-jasontang.github.io/imgs/conv_no_padding.gif" alt="卷积动画演示"></p>
+<p><img src="https://mic-jasontang.github.io/imgs/conv_padding.gif" alt="卷积动画演示"></p>
+<blockquote>
+<p>在上面我们没有使用很专业的数学公式来表示，来解释卷积操作和相关操作，我结合我自己的理解，争取做到白话，及时没有数学基础，也能理解卷积核池化操作。</p>
+<ul>
+<li>卷积的目的</li>
+</ul>
+<p>卷积在图像中的目的就是为了提取特征，我认为这就是深度学习的核心，因为有了卷积层，才避免了我们来手动提取图像的特征，让卷积层自动提取图像的高维度且有效的特征，虽然这没有手动提取特征比如Canny边缘，SIFT，HOG等的强大数学理论基础的支撑，但是卷积层提取的特征让最终的分类、识别结果往往非常的好。比如LeNet-5模型能在MNIST数据集上达到99%的识别率，一般来说网络结构越复杂，越深，往往最终的精确率会越高。</p>
+</blockquote>
+<hr>
+<p><strong>卷积分为许多种，下面将会一一介绍。</strong></p>
+<ul>
+<li>符号约定</li>
+</ul>
+<blockquote>
+<p>i: 输入大小表示为i x i</p>
+<p>k: 卷积核大小表示为k x k</p>
+<p>s: 步长</p>
+<p>p: 填充</p>
+<p>o: 输出表示为o*o</p>
+</blockquote>
+<h2 id="1-1-unit-strides"><a href="#1-1-unit-strides" class="headerlink" title="1.1 unit strides"></a>1.1 unit strides</h2><p>卷积从大体上可以分为单位步长（unit strides)和非单位步长（Non-unit strides），还可以细分为有0填充和无0填充。</p>
+<h3 id="1-1-1-No-zero-padding-unit-strides"><a href="#1-1-1-No-zero-padding-unit-strides" class="headerlink" title="1.1.1  No zero padding, unit strides"></a>1.1.1  No zero padding, unit strides</h3><p><img src="https://mic-jasontang.github.io/imgs/figure2.1.png" alt="figure2.1"></p>
+<p>无零填充 单位步长的卷积，蓝色矩阵是输入（4x4）,深蓝色是卷积核（3x3）,上方绿色是输出（2x2）.输出矩阵大小的计算公式为：<br><img src="https://mic-jasontang.github.io/imgs/figure2.1_2.png" alt="figure2.1"></p>
+<p>动画演示<br><img src="https://mic-jasontang.github.io/imgs/figure2.1.gif" alt="figure2.1"></p>
+<h3 id="1-1-2-Zero-padding-unit-strides"><a href="#1-1-2-Zero-padding-unit-strides" class="headerlink" title="1.1.2 Zero padding, unit strides"></a>1.1.2 Zero padding, unit strides</h3><p><img src="https://mic-jasontang.github.io/imgs/figure2.2.png" alt="figure2.2"></p>
+<p>有零填充（p=2） 单位步长的卷积，蓝色矩阵是输入（5x5）,深蓝色是卷积核（3x3）,上方绿色是输出（6x6）.输出矩阵大小的计算公式为：<br><img src="https://mic-jasontang.github.io/imgs/figure2.2_2.png" alt="figure2.2"></p>
+<p>动画演示<br><img src="https://mic-jasontang.github.io/imgs/figure2.2.gif" alt="figure2.2"></p>
+<h4 id="1-1-2-1-Zero-padding-unit-strides-Half-Same-padding"><a href="#1-1-2-1-Zero-padding-unit-strides-Half-Same-padding" class="headerlink" title="1.1.2.1 Zero padding, unit strides - Half(Same) padding"></a>1.1.2.1 Zero padding, unit strides - Half(Same) padding</h4><p>这种情况叫Half Padding 也叫 Same Padding，因为它能保证输入和输出的尺寸是一致的<br><img src="https://mic-jasontang.github.io/imgs/figure2.3.png" alt="figure2.3"></p>
+<p>有零填充（p=1） 单位步长的卷积，蓝色矩阵是输入（5x5）,深蓝色是卷积核（3x3）,上方绿色是输出（5x5）.输出矩阵大小的计算公式为：<br><img src="https://mic-jasontang.github.io/imgs/figure2.3_2.png" alt="figure2.3"></p>
+<p>动画演示<br><img src="https://mic-jasontang.github.io/imgs/figure2.3.gif" alt="figure2.3"></p>
+<h4 id="1-1-2-2-Zero-padding-unit-strides-Full-padding"><a href="#1-1-2-2-Zero-padding-unit-strides-Full-padding" class="headerlink" title="1.1.2.2 Zero padding, unit strides - Full padding"></a>1.1.2.2 Zero padding, unit strides - Full padding</h4><p>卷积操作产生的输出一般都会减少输入图片的尺寸，但有时候我们需要放大输入图片的尺寸，这个时候就需要使用到Full Padding。<br><img src="https://mic-jasontang.github.io/imgs/figure2.4.png" alt="figure2.4"></p>
+<p>有零填充（p=2） 单位步长的卷积，蓝色矩阵是输入（5x5）,深蓝色是卷积核（3x3）,上方绿色是输出（7x7）.输出矩阵大小的计算公式为：<br><img src="https://mic-jasontang.github.io/imgs/figure2.4_2.png" alt="figure2.4"></p>
+<p>动画演示<br><img src="https://mic-jasontang.github.io/imgs/figure2.4.gif" alt="figure2.4"></p>
+<h2 id="1-2-Non-unit-strides"><a href="#1-2-Non-unit-strides" class="headerlink" title="1.2 Non-unit strides"></a>1.2 Non-unit strides</h2><p>接下来介绍非单位步长（Non-unit stride)的卷积操作，分为有零填充和无零填充。</p>
+<h3 id="1-2-1-No-zero-padding-non-unit-strides"><a href="#1-2-1-No-zero-padding-non-unit-strides" class="headerlink" title="1.2.1 No zero padding, non-unit strides"></a>1.2.1 No zero padding, non-unit strides</h3><p><img src="https://mic-jasontang.github.io/imgs/figure2.5.png" alt="figure2.5"></p>
+<p>无零填充 非单位步长（s=2）的卷积，蓝色矩阵是输入（5x5）,深蓝色是卷积核（3x3）,上方绿色是输出（2x2）.输出矩阵大小的计算公式为：</p>
+<p><img src="https://mic-jasontang.github.io/imgs/figure2.5_5.png" alt="figure2.5"></p>
+<p>其中向下取整是为了避免(i-k)/s是小数的情况。</p>
+<p>动画演示<br><img src="https://mic-jasontang.github.io/imgs/figure2.5.gif" alt="figure2.5"></p>
+<h3 id="1-2-2-Zero-padding-non-unit-strides"><a href="#1-2-2-Zero-padding-non-unit-strides" class="headerlink" title="1.2.2 Zero padding, non-unit strides"></a>1.2.2 Zero padding, non-unit strides</h3><p><img src="https://mic-jasontang.github.io/imgs/figure2.6.png" alt="figure2.6"></p>
+<p>有零填充（p=1） 非单位步长（s=2）的卷积，蓝色矩阵是输入（5x5）,深蓝色是卷积核（3x3）,上方绿色是输出（3x3）.输出矩阵大小的计算公式为：<br><img src="https://mic-jasontang.github.io/imgs/figure2.6_2.png" alt="figure2.6"></p>
+<p>其中向下取整是为了避免(i+2p-k)/s是小数的情况。</p>
+<p>动画演示<br><img src="https://mic-jasontang.github.io/imgs/figure2.6.gif" alt="figure2.6"></p>
+<h2 id="1-3-Convolution-as-a-matrix-operation"><a href="#1-3-Convolution-as-a-matrix-operation" class="headerlink" title="1.3 Convolution as a matrix operation"></a>1.3 Convolution as a matrix operation</h2><p>卷积操作也可以被表示为矩阵的形式，比如将1.1.1中的图转化为矩阵，如下图所示：</p>
+<p>1.1.1中的图被表示为如下形式</p>
+<p><img src="https://mic-jasontang.github.io/imgs/conv_as_matrix_2.png" alt="figure2.6"></p>
+<p>矩阵表示的形式</p>
+<p><img src="https://mic-jasontang.github.io/imgs/conv_as_matrix.png" alt="figure2.6"></p>
+<p>我将上面的矩阵划分为了4行，每一行划分为了4列，表示此卷积操作需要进行16次，W0,0 W0,1 …… W2,2我在图中标注了出来。这个矩阵可以这样来看，按行来看，第一行对应于矩阵表示图的第一个图，第二行对应于矩阵表示图的第二个图，一次类推。</p>
+<h1 id="2-Pooling"><a href="#2-Pooling" class="headerlink" title="2. Pooling"></a>2. Pooling</h1><blockquote>
+<p>池化操作是什么？</p>
+<p>池化操作的过程和卷积很类似，但是卷积是用来提取特征的，池化层是用来减少卷积层提取的特征的个数的，可以理解为是为了增加特征的鲁棒性或者是降维。</p>
+</blockquote>
+<blockquote>
+<p>池化操作是什么？</p>
+<p>池化操作的过程和卷积很类似，但是卷积是用来提取特征的，池化层是用来减少卷积层提取的特征的个数的，可以理解为是为了增加特征的鲁棒性或者是降维。</p>
+</blockquote>
+<p>池化分为平均值池化和最大值池化，下面会一一介绍。</p>
+<h2 id="2-1-Average-Pooling"><a href="#2-1-Average-Pooling" class="headerlink" title="2.1 Average Pooling"></a>2.1 Average Pooling</h2><ul>
+<li>平均值池化可以被表示为</li>
+</ul>
+<p><img src="https://mic-jasontang.github.io/imgs/figure1.5.png" alt="figure1.5"></p>
+<ul>
+<li>平均值池化的动画演示</li>
+</ul>
+<p><img src="https://mic-jasontang.github.io/imgs/figure1.5.gif" alt="figure1.6"></p>
+<p>可以看到池化操作也有一个类似于卷积的核，但是这个核不需要提供值，只是表示一个能作用于输入图片的窗口大小。</p>
+<h2 id="2-2-Max-Pooling"><a href="#2-2-Max-Pooling" class="headerlink" title="2.2 Max Pooling"></a>2.2 Max Pooling</h2><ul>
+<li>最大值池化可以被表示为</li>
+</ul>
+<p><img src="https://mic-jasontang.github.io/imgs/figure1.6.png" alt="figure1.6"></p>
+<ul>
+<li>最大值池化的动画演示</li>
+</ul>
+<p><img src="https://mic-jasontang.github.io/imgs/figure1.6.gif" alt="figure1.6"></p>
+<p>可以看到池化操作也有一个类似于卷积的核，但是这个核不需要提供值，只是表示一个能作用于输入图片的窗口大小。</p>
+<h1 id="3-3D-Conv"><a href="#3-3D-Conv" class="headerlink" title="3. 3D-Conv"></a>3. 3D-Conv</h1><p>3维的卷积，我个人的简单理解，就是在2维卷积的基础上加了一个深度的概念，如图。</p>
+<p><img src="https://mic-jasontang.github.io/imgs/conv_3d.jpg" alt="figure1.6"></p>
+<p>输入是一个32x32x3的矩阵，卷积核假定是5x5x3，可以看到一次的卷积操作的结果就是一个带有深度的单位矩阵（2维的一次卷积操作的结果是深度为1的单位矩阵）。这里的深度可以自己指定。</p>
+<p>为了更好的理解3维的卷积，这里引用斯坦福写的一篇博客里面的动画。<a href="http://cs231n.github.io/convolutional-networks/" title="博客原地址" target="_blank" rel="noopener">http://cs231n.github.io/convolutional-networks/</a></p>
+&lt;iframe<br>    width=”100%”<br>    height=”100%”<br>    src=”<a href="http://cs231n.github.io/assets/conv-demo/index.html&quot;" target="_blank" rel="noopener">http://cs231n.github.io/assets/conv-demo/index.html&quot;</a><br>点击查看动画<a href="http://cs231n.github.io/assets/conv-demo/index.html" target="_blank" rel="noopener">http://cs231n.github.io/assets/conv-demo/index.html</a><br><br>    width=”750”<br>    height=”720”<br>    src=”<a href="https://cs231n.github.io/assets/conv-demo/index.html&quot;" target="_blank" rel="noopener">https://cs231n.github.io/assets/conv-demo/index.html&quot;</a><br>    frameborder=”0”<br>    allowfullscreen&gt;<br>
+
+<h1 id="4-LeNet-5"><a href="#4-LeNet-5" class="headerlink" title="4. LeNet-5"></a>4. LeNet-5</h1><p>这里介绍下LeNet-5模型，为了理解前面讲述的各种模型</p>
+<h1 id="Bibliography"><a href="#Bibliography" class="headerlink" title="Bibliography"></a>Bibliography</h1><p>这里介绍下LeNet-5模型，为了理解前面讲述的各种卷积和2种池化，下面具体介绍LeNet-5的每个层。</p>
+<ul>
+<li>C1:<ul>
+<li>input: 32x32x1</li>
+<li>conv: 5x5x1</li>
+<li>padding: No Zero</li>
+<li>strides: 1</li>
+<li>output: 28x28x6</li>
+<li>parmas: 5x5x1x6+6 = 156</li>
+</ul>
+</li>
+</ul>
+<blockquote>
+<p>第一层，卷积层</p>
+<p>这一层的输入就是原始的图像像素32<em>32</em>1。第一个卷积层过滤器尺寸为5<em>5，深度为6，不使用全0填充，步长为1。所以这一层的输出：28</em>28<em>6，卷积层共有5</em>5<em>1</em>6+6=156个参数。</p>
+</blockquote>
+<ul>
+<li>S2:<ul>
+<li>input: 28x28x6</li>
+<li>pool: 2x2</li>
+<li>padding: No Zero</li>
+<li>strides: 2</li>
+<li>output: 14x14x6</li>
+</ul>
+</li>
+</ul>
+<blockquote>
+<p>第二层，池化层</p>
+<p>这一层的输入为第一层的输出，是一个28<em>28</em>6的节点矩阵。本层采用的过滤器大小为2<em>2，长和宽的步长均为2，所以本层的输出矩阵大小为14</em>14*6。</p>
+</blockquote>
+<ul>
+<li>C3:<ul>
+<li>input: 14x14x6</li>
+<li>conv: 5x5x16</li>
+<li>padding: No Zero</li>
+<li>strides: 1</li>
+<li>output: 10x10x16</li>
+<li>params: 5x5x6x16+16=2416</li>
+</ul>
+</li>
+</ul>
+<blockquote>
+<p>第三层，卷积层</p>
+<p>本层的输入矩阵大小为14<em>14</em>6，使用的过滤器大小为5<em>5，深度为16.本层不使用全0填充，步长为1。本层的输出矩阵大小为10</em>10<em>16。本层有5</em>5<em>6</em>16+16=2416个参数。</p>
+</blockquote>
+<ul>
+<li>S4:<ul>
+<li>input: 10x10x16</li>
+<li>pool: 2x2</li>
+<li>padding: No Zero</li>
+<li>strides: 2</li>
+<li>output: 5x5x16</li>
+</ul>
+</li>
+</ul>
+<blockquote>
+<p>第四层，池化层</p>
+<p>本层的输入矩阵大小10<em>10</em>16。本层采用的过滤器大小为2<em>2，长和宽的步长均为2，所以本层的输出矩阵大小为5</em>5*16。</p>
+</blockquote>
+<ul>
+<li>C5:<ul>
+<li>input: 5x5x16</li>
+<li>conv: 5x5</li>
+<li>padding: No Zero</li>
+<li>strides: 1</li>
+<li>output: 120</li>
+<li>params: 5x5x16x120 + 120=48120</li>
+</ul>
+</li>
+</ul>
+<blockquote>
+<p>第五层，全连接层(卷积层)</p>
+<p>本层的输入矩阵大小为5<em>5</em>16，在LeNet-5论文中将这一层成为<strong>卷积层</strong>，但是因为过滤器的大小就是5<em>5，所以和全连接层没有区别。如果将5</em>5<em>16矩阵中的节点拉成一个向量，那么这一层和全连接层就一样了。本层的输出节点个数为120，总共有5</em>5<em>16</em>120+120=48120个参数。</p>
+</blockquote>
+<ul>
+<li>F6:<ul>
+<li>input: 120</li>
+<li>output: 84</li>
+<li>params: 120x84+84 = 10164</li>
+</ul>
+</li>
+</ul>
+<blockquote>
+<p>第六层，全连接层</p>
+<p>本层的输入节点个数为120个，输出节点个数为84个，总共参数为120*84+84=10164个。</p>
+</blockquote>
+<ul>
+<li>Output:<ul>
+<li>input: 84</li>
+<li>output: 10</li>
+<li>parmas: 84x10 + 10 = 850</li>
+</ul>
+</li>
+</ul>
+<blockquote>
+<p>第七层，全连接层</p>
+<p>本层的输入节点个数为84个，输出节点个数为10个，总共参数为84*10+10=850</p>
+</blockquote>
+<h1 id="Code"><a href="#Code" class="headerlink" title="Code"></a>Code</h1><ul>
+<li>lenet_train.py</li>
+</ul>
+<p>训练代码</p>
+<pre><code>#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# @Time    : 2018/2/21 16:08
+# @update  : 2018年4月19日21:38:34
+# @Author  : Jasontang
+# @Site    : 
+# @File    : lenet_train.py
+# @ToDo    : 使用LeNet-5模型。定义了神经网络的训练过程
+
+import os
+
+import tensorflow as tf
+import numpy as np
+from tensorflow.examples.tutorials.mnist import input_data
+
+import neural_network_learning.cnn.lenet.mnist_inference as mnist_inference
+
+# 配置神经网络的参数
+BATCH_SIZE = 100
+# LEARNING_REATE_BASE = 0.8  # 0.8的学习率导致准确率不高。明显看出不收敛，准确率跟瞎猜差不多。
+LEARNING_REATE_BASE = 0.01  # 降低学习率
+LEARNING_RATE_DECAY = 0.99
+REGULARAZTION_RATE = 0.0001
+TRAING_STEPS = 30000
+MOVING_AVERAGE_DECAY = 0.99
+# 模型保存的路径和文件名
+MODEL_SAVE_PATH = &quot;./model/&quot;
+MODEL_NAME = &quot;model.ckpt&quot;
+
+
+def train(mnist):
+# 定义输入输出placeholder
+x = tf.placeholder(tf.float32,
+                   [BATCH_SIZE,
+                    mnist_inference.IMAGE_SIZE,
+                    mnist_inference.IMAGE_SIZE,
+                    mnist_inference.NUM_CHANNELS], name=&quot;input-x&quot;)
+y_ = tf.placeholder(tf.float32, [None, mnist_inference.OUTPUT_NODE], name=&quot;input-y&quot;)
+
+regularizer = tf.contrib.layers.l2_regularizer(REGULARAZTION_RATE)
+y = mnist_inference.inference(x, True, regularizer)
+global_step = tf.Variable(0, trainable=False)
+
+variable_averages = tf.train.ExponentialMovingAverage(MOVING_AVERAGE_DECAY, global_step)
+variables_average_op = variable_averages.apply(tf.trainable_variables())
+cross_entropy = tf.nn.sparse_softmax_cross_entropy_with_logits(labels=tf.argmax(y_, 1), logits=y)
+cross_entropy_mean = tf.reduce_mean(cross_entropy)
+
+# loss = tf.get_collection(&quot;losses&quot;) 返回一个列表
+# loss_add = tf.add_n(loss) 将列表元素进行相加
+loss = cross_entropy_mean + tf.add_n(tf.get_collection(&quot;losses&quot;))
+
+learing_rate = tf.train.exponential_decay(LEARNING_REATE_BASE,
+                                          global_step,
+                                          mnist.train.num_examples / BATCH_SIZE,
+                                          LEARNING_RATE_DECAY)
+train_step = tf.train.GradientDescentOptimizer(learing_rate).minimize(loss, global_step)
+
+with tf.control_dependencies([train_step, variables_average_op]):
+    train_op = tf.no_op(name=&quot;train&quot;)
+
+# 初始化持久化类
+saver = tf.train.Saver()
+with tf.device(&quot;/gpu:0&quot;):
+    session_conf = tf.ConfigProto(allow_soft_placement=True)
+    with tf.Session(config=session_conf) as sess:
+        tf.global_variables_initializer().run()
+
+        for i in range(TRAING_STEPS):
+            xs, ys = mnist.train.next_batch(BATCH_SIZE)
+            reshaped_xs = np.reshape(xs, [BATCH_SIZE,
+                                          mnist_inference.IMAGE_SIZE,
+                                          mnist_inference.IMAGE_SIZE,
+                                          mnist_inference.NUM_CHANNELS])
+            # print(type(xs))
+            # print(type(reshaped_xs))
+            _, loss_value, step = sess.run([train_op, loss, global_step], feed_dict={x: reshaped_xs, y_: ys})
+
+            if i % 1000 == 0:
+                print(&quot;After %d training step(s), loss on training batch is %g.&quot; % (step, loss_value))
+
+                saver.save(sess, os.path.join(MODEL_SAVE_PATH, MODEL_NAME), global_step=global_step)
+
+
+def main(argv=None):
+    # 存放目录为当前工程目录下的MNIST_data目录
+    mnist = input_data.read_data_sets(&quot;./MNIST_data&quot;, one_hot=True)
+    train(mnist)
+
+
+if __name__ == &apos;__main__&apos;:
+    tf.app.run()
+</code></pre><ul>
+<li>lenet_inference</li>
+</ul>
+<p>计算代码</p>
+<pre><code>#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# @Time    : 2018/2/20 19:43
+# @update  : 2018年4月19日21:38:34
+# @Author  : Jasontang
+# @Site    : 
+# @File    : lent_inference.py
+# @ToDo    : 使用LeNet-5模型。定义了前向传播的过程及神经网络的参数
+
+
+import tensorflow as tf
+
+# 定义神经网络结构相关的参数
+INPUT_NODE = 784
+OUTPUT_NODE = 10
+
+IMAGE_SIZE = 28
+NUM_CHANNELS = 1
+NUM_LABELS = 10
+
+# 第一层卷积层的尺寸和深度
+CONV1_DEEP = 32
+CONV1_SIZE = 5
+# 第二层卷积层的尺寸和深度
+CONV2_DEEP = 64
+CONV2_SIZE = 5
+# 全连接层的结点个数
+FC_SIZE = 512
+
+# 卷积神经网络的前向传播过程
+# 添加一个新的参数train，用于区分训练过程和测试过程。
+# 在这个程序中将用到dropout方法，dropout可以进一步提升模型可靠性并防止
+# 过拟合。dropout过程只在训练时使用。
+def inference(input_tensor, train, regularizer, dropout=0.5):
+    # 声明第一层神经网络的变量并完成前向传播过程
+    # 和标准的LeNet-5模型不大一样，这里定义的卷积层输入为28*28*1的原始MNIST图片像素。
+    # 因为卷积层使用了全0填充，所以输出为28*28*32的矩阵。
+    with tf.variable_scope(&quot;layer1-conv1&quot;):
+        conv1_weights = tf.get_variable(&quot;weights&quot;, [CONV1_SIZE, CONV1_SIZE, NUM_CHANNELS, CONV1_DEEP],
+                                        initializer=tf.truncated_normal_initializer(stddev=0.1))
+        conv1_biases = tf.get_variable(&quot;biases&quot;, [CONV1_DEEP], initializer=tf.constant_initializer(0.1))
+        # 使用变长为5，深度为32的过滤器，过滤器移动的步长为1，且使用全0填充。
+        conv1 = tf.nn.conv2d(input_tensor, conv1_weights, strides=[1, 1, 1, 1], padding=&quot;SAME&quot;)
+        relu1 = tf.nn.relu(tf.nn.bias_add(conv1, conv1_biases))
+
+    # 实现第二层池化层的前向传播过程，这里选择最大池化层，池化层过滤器的变长为2
+    # 使用全0填充且移动的步长为2，这一层的输入是上一层的输出，也就是28*28*32的矩阵。
+    # 输出为14*14*32的矩阵
+    with tf.variable_scope(&quot;layer2-pool1&quot;):
+        pool1 = tf.nn.max_pool(relu1,
+                               ksize=[1, 2, 2, 1],
+                               strides=[1, 2, 2, 1],
+                               padding=&quot;SAME&quot;)
+
+    # 声明第三层卷积层的变量并实现前向传播过程，这一层的输入为14*14*32的矩阵。
+    # 输出为14*14*64的矩阵。
+    with tf.variable_scope(&quot;layer3-conv2&quot;):
+        conv2_weights = tf.get_variable(&quot;weight&quot;,
+                                        [CONV2_SIZE, CONV2_SIZE, CONV1_DEEP, CONV2_DEEP],
+                                        initializer=tf.truncated_normal_initializer(stddev=0.1))
+        conv2_biases = tf.get_variable(&quot;bias&quot;, [CONV2_DEEP], initializer=tf.constant_initializer(0.1))
+
+        # 使用边长为5，深度为64的过滤器，过滤器移动的步长为1，且使用全0填充。
+        conv2 = tf.nn.conv2d(pool1, conv2_weights, strides=[1, 1, 1, 1], padding=&quot;SAME&quot;)
+        relu2 = tf.nn.relu(tf.nn.bias_add(conv2, conv2_biases))
+
+    # 实现第四层池化层的前向传播过程。这一层和第二层的记过是一样的，这一层的输入为14*14*64的矩阵，
+    # 输出位7*7*64的矩阵。
+    with tf.name_scope(&quot;layer4-pool2&quot;):
+        pool2 = tf.nn.max_pool(relu2,
+                               ksize=[1, 2, 2, 1],
+                               strides=[1, 2, 2, 1],
+                               padding=&quot;SAME&quot;)
+
+    # 将第四层池化层的输出转化为第五层全连接层的输入格式。
+    # 第四层的输出为7*7*64的矩阵，然后第五层全连接层需要的输入格式为向量
+    # 所以在这里需要将这个7*7*64的矩阵拉直成一个向量。pool2.get_shape函数可以得到
+    # 第四层输出矩阵的维度而不需要手工计算。注意因为每一层神经网络的输入输出都为一个batch的矩阵，
+    # 所以这里得到的维度也包含了一个batch的数据的个数。
+    pool_shape = pool2.get_shape().as_list()
+
+    # 计算将矩阵拉直成向量之后的长度，这个长度就是矩阵长宽及深度的乘积。
+    # 这里pool_shape[0]为一个batch中数据的个数
+    nodes = pool_shape[1] * pool_shape[2] * pool_shape[3]
+
+    # 通过tf.reshape函数将第四层的输出变成一个batch的向量
+    reshaped = tf.reshape(pool2, [pool_shape[0], nodes])
+
+    # 声明第五层全连接层的变量并实现前向传播过程，这一层的输入是拉直之后的一组向量，
+    # 向量长度为3136，输出是一组长度为512的向量。这一层和之前在重构MNIST数据集的代码基本一致，
+    # 唯一的区别就是引入了dropout的概念。dropout在训练时会随机将部分结点的输出改为0。
+    # dropout可以避免过拟合问题，从而使得模型在测试数据上的效果更好。
+    # dropout一般只在全连接层而不是卷积层或者池化层使用。
+    with tf.variable_scope(&quot;layer5-fc1&quot;):
+        fc1_weights = tf.get_variable(&quot;weight&quot;,
+                                      [nodes, FC_SIZE],
+                                      initializer=tf.truncated_normal_initializer(stddev=0.1))
+        # 只要全连接层的权重需要加入正则化
+        if regularizer is not None:
+            # 当使用正则化生成函数时,当前变量的正则化损失加入名字为losses的集合.
+            tf.add_to_collection(&quot;losses&quot;, regularizer(fc1_weights))
+        fc1_biases = tf.get_variable(&quot;bias&quot;,
+                                     [FC_SIZE],
+                                     initializer=tf.constant_initializer(0.1))
+        fc1 = tf.nn.relu(tf.matmul(reshaped, fc1_weights) + fc1_biases)
+        if train:
+            fc1 = tf.nn.dropout(fc1, dropout)
+
+    # 声明第六层全连接层的变量并实现前向传播过程。
+    # 这一层的输入为一组长度为512的向量，输出为一组长度为10的向量。
+    # 这一层的输出通过Softmax之后就得到了最后的分类结果。
+    with tf.variable_scope(&quot;layer6-fc2&quot;):
+        fc2_weights = tf.get_variable(&quot;weight&quot;,
+                                      [FC_SIZE, NUM_LABELS],
+                                      initializer=tf.truncated_normal_initializer(stddev=0.1))
+        if regularizer is not None:
+            # 当使用正则化生成函数时,当前变量的正则化损失加入名字为losses的集合.
+            tf.add_to_collection(&quot;losses&quot;, regularizer(fc2_weights))
+        fc2_biases = tf.get_variable(&quot;bias&quot;,
+                                     [NUM_LABELS],
+                                     initializer=tf.constant_initializer(0.1))
+        logit = tf.matmul(fc1, fc2_weights) + fc2_biases
+
+    # 返回第六层的输出
+    return logit
+</code></pre><ul>
+<li>lenet_eval.py</li>
+</ul>
+<p>测试代码</p>
+<pre><code>#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# @Time    : 2018年4月19日21:38:34
+# @Author  : Jasontang
+# @Site    : 
+# @File    : mnist_eval.py
+# @ToDo    : 测试过程
+
+
+import time
+import tensorflow as tf
+import numpy as np
+from tensorflow.examples.tutorials.mnist import input_data
+
+import neural_network_learning.cnn.lenet.mnist_inference as mnist_inference
+import neural_network_learning.cnn.lenet.mnist_train as mnist_train
+
+# 每10s加载一次最新模型，并在测试数据上测试最新模型的正确率
+EVAL_INTERVAL_SECS = 10
+
+
+def evaluate(mnist):
+    x = tf.placeholder(tf.float32,
+                       [mnist.validation.images.shape[0],
+                        mnist_inference.IMAGE_SIZE,
+                        mnist_inference.IMAGE_SIZE,
+                        mnist_inference.NUM_CHANNELS], name=&quot;input-x&quot;)
+    y_ = tf.placeholder(tf.float32, [None, mnist_inference.OUTPUT_NODE], name=&quot;input-y&quot;)
+
+    y = mnist_inference.inference(x, False, None)
+
+    correct_prediction = tf.equal(tf.argmax(y, 1), tf.argmax(y_, 1))
+    accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
+
+    variable_averages = tf.train.ExponentialMovingAverage(mnist_train.MOVING_AVERAGE_DECAY)
+    variables_to_restore = variable_averages.variables_to_restore()
+    saver = tf.train.Saver(variables_to_restore)
+
+    # 每隔EVAL_INTERVAL_SECS秒调用一次计算正确率的过程以检测训练过程中正确率的变化
+    stop_count = 0
+    while True:
+        with tf.Session() as sess:
+            # tf.train.get_checkpoint_state函数会通过checkpoint文件自动找刀目录中最新模型的文件名
+            ckpt = tf.train.get_checkpoint_state(mnist_train.MODEL_SAVE_PATH)
+            # 停止条件 #
+            stop_count += 1
+            if stop_count &gt; 5:
+                return
+            # 停止条件 #
+            if ckpt and ckpt.model_checkpoint_path:
+                # 加载模型
+                saver.restore(sess, ckpt.model_checkpoint_path)
+                # 通过文件名得到模型保存时迭代的轮数
+                # 输出./model/model.ckpt-29001
+                print(ckpt.model_checkpoint_path)
+                global_step = ckpt.model_checkpoint_path.split(&quot;/&quot;)[-1].split(&quot;-&quot;)[-1]
+                validate_feed = {x: mnist.validation.images,
+                                 y_: mnist.validation.labels}
+
+                # print(validate_feed[x])
+                reshaped_x = np.reshape(validate_feed[x],
+                                        [validate_feed[x].shape[0],
+                                         mnist_inference.IMAGE_SIZE,
+                                         mnist_inference.IMAGE_SIZE,
+                                         mnist_inference.NUM_CHANNELS])
+                validate_feed[x] = reshaped_x
+                accuracy_score = sess.run(accuracy, feed_dict=validate_feed)
+                print(&quot;After %s training step(s), validation accuracy is %g&quot; % (global_step, accuracy_score))
+            else:
+                print(&quot;No checkpoint file found&quot;)
+                return
+        time.sleep(EVAL_INTERVAL_SECS)
+
+
+def main(argv=None):
+    # 存放目录为当前工程目录下的MNIST_data目录
+    mnist = input_data.read_data_sets(&quot;./MNIST_data&quot;, one_hot=True)
+    evaluate(mnist)
+
+
+if __name__ == &apos;__main__&apos;:
+    tf.app.run()
+</code></pre><p>MNIST数据集</p>
+<p><img src="https://mic-jasontang.github.io/imgs/mnist_data.png" alt="AI Live"></p>
+<p>测试结果</p>
+<p><img src="https://mic-jasontang.github.io/imgs/mnist_result.png" alt="AI Live"></p>
+<p>最终正确率可以达到99%</p>
+<h1 id="Bibliography-1"><a href="#Bibliography-1" class="headerlink" title="Bibliography"></a>Bibliography</h1><ol>
+<li>A guide to convolution arithmetic for deep learning<a href="https://arxiv.org/pdf/1603.07285.pdf" title="A guide to convolution arithmetic for deep learning" target="_blank" rel="noopener">https://arxiv.org/pdf/1603.07285.pdf</a></li>
+<li>TensforFlow 实战Google深度学习框架</li>
+</ol>
+<p>我参与举办了一个小团体，主要是技术分享，这篇是第三期的分享内容。下面是我们的公众号:</p>
+<p><img src="https://mic-jasontang.github.io/imgs/AI_Live.jpg" alt="AI Live"></p>
+<p><img src="https://mic-jasontang.github.io/imgs/join_us.jpg" alt="Join Us"></p>
+
+                
+<p class="green-link-context">
+    <a href="/2019/03/30/第 1 周学习分享/" rel="next" title="风格迁移与序列模型研究">
+    上一篇：风格迁移与序列模型研究
+  </a>
+</p>
+
+
+
+<p class="green-link-context">
+    <a href="/2018/03/25/字符串-旋转词/" rel="next" title="字符串-旋转词">
+    下一篇：字符串-旋转词
+  </a>
+</p>
+
+
+            </div>
+			
+        </div>
+    </div>
+</article>
+
+
+
+
+
+
+
+
+	<!-- 来必力City版安装代码 -->
+<div id="lv-container" data-id="city" data-uid="MTAyMC8zNTAzNy8xMTU3Mw==">
+	<script type="text/javascript">
+   (function(d, s) {
+       var j, e = d.getElementsByTagName(s)[0];
+
+       if (typeof LivereTower === 'function') { return; }
+
+       j = d.createElement(s);
+       j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+       j.async = true;
+
+       e.parentNode.insertBefore(j, e);
+   })(document, 'script');
+	</script>
+<noscript> 为正常使用来必力评论功能请激活JavaScript</noscript>
+</div>
+<!-- City版安装代码已完成 -->
+
+
+
+
+
+</div>
+
+        <div class="fixed-action-btn float-sitemap">
+    <a class="btn-floating btn-large green">
+      <i class="fa fa-caret-square-o-up"></i>
+    </a>
+    <ul>
+      <li><a class="btn-return-top btn-floating waves-effect blue" title="回到顶部"><i class="fa fa-arrow-circle-o-up"></i></a></li>
+      <li><a class="btn-floating waves-effect button-collapse orange" data-activates="main-menu" title="菜单"><i class="fa fa-navicon"></i></a></li>
+    </ul>
+  </div>
+
+    </main>
+    <footer class="page-footer indigo darken-1">
+    
+    <div class="footer-container container">
+        <div class="row">
+            
+            <div class="social-group col m4 s12">
+                <h5 class="white-text">社交</h5>
+                
+                    <a class="social-link" href="https://github.com/mic-jasontang" target="_blank">
+                        <i class="fa fa-2x fa-github"></i>
+                    </a>
+                
+                
+    <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js">
+    </script>
+    <div class="site-visitors-container white-text">
+        <span>
+            <i class="fa fa-user"></i>
+            <span class="busuanzi-value" id="busuanzi_value_site_uv"></span>
+        </span> 
+        <span>&nbsp;|&nbsp;</span>
+        <span>
+            <i class="fa fa-eye"></i>
+            <span class="busuanzi-value" id="busuanzi_value_site_pv"></span>
+        </span>
+    </div>
+
+
+            </div>
+            
+
+            
+            <div class="col m8 s12">
+                <h5 class="white-text">友情链接</h5>
+                
+                    <a class="social-link" href="https://github.com/mic-jasontang" target="_blank">Github地址</a>
+                
+            </div>
+            
+        </div>
+    </div>
+    
+
+    <div class="footer-copyright green-link-context">
+        <div class="container">
+            © 2018 tech.radish <i class="fa fa fa-heart"></i>
+            <p class="right" style="margin-top: 0;">本博客由 <a href="https://hexo.io"><span style="color:#fff">Hexo</span></a> 强力驱动</p>
+        </div>
+    </div>
+</footer>
+
+
+
+    <noscript>
+    <div class="noscript">
+        <p class="center-align">当前网速较慢或者你使用的浏览器不支持博客特定功能，请尝试刷新或换用Chrome、Firefox等现代浏览器</p>
+    </div>
+</noscript>
+<div class="noscript">
+    <p class="center-align">当前网速较慢或者你使用的浏览器不支持博客特定功能，请尝试刷新或换用Chrome、Firefox等现代浏览器</p>
+</div>
+
+
+<script src="/js/jquery.min.js"></script>
+<script src="/js/materialize.min.js"></script>
+<script async src="//dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js">
+</script>
+
+<script>
+    (function($) {
+        $(document).ready(function() {
+            // 隐藏禁用javascript（针对微信内置浏览器）的提示
+            $('.noscript').hide();
+
+            // 图片缩放效果
+            var $imgs = $('img').not('.slider-image').not('.avatar-image').not('.carousel-image').not('.card-cover-image').not('.qrcode');
+
+            // 给图片加上点击放大效果（materialbox插件）
+            $imgs.addClass('materialboxed').each(function(i, el) {
+                $(this).attr('data-caption', $(this).attr('alt') || ' ');
+            }).materialbox();
+
+            // 优化表格的显示
+            $('table').each(function() {
+                var $table = $(this);
+                // 除去多行代码的情况
+                if ($table.find('pre').length == 0) {
+                    $table.addClass('responsive-table striped bordered');
+                }
+            });
+
+            // 首页幻灯片
+            $('.slider').slider({indicators: true, full_width: true, interval: 8000});
+
+            $(".button-collapse").sideNav();
+            $(".category-menu").sideNav();
+
+            // 针对gallery post
+            $('.carousel').carousel({full_width: true});
+            $('.carousel-control.prev').click(function() {
+                $('.carousel').carousel('prev');
+            });
+            $('.carousel-control.next').click(function() {
+                $('.carousel').carousel('next');
+            });
+
+            // 文章目录
+            $('article').not('.simple-article').find('h1').add('h2').add('h3').add('h4').add('h5').add('h6').scrollSpy();
+
+            // 目录随屏幕滚动（防止目录过长越过footer）
+            var $toc = $('.toc');
+            var scrollTargetTop = 0;
+            $(window).scroll(function() {
+                var $activeLink = $toc.find('a.active.section');
+                if ($(window).scrollTop() < 100) {
+                    scrollTargetTop = 0;
+                } else {
+                    if ($activeLink[0]) {
+                        scrollTargetTop = $activeLink.offset().top - $toc.offset().top;
+                    }
+                }
+                $toc.css('top', '-' + scrollTargetTop + 'px');
+            });
+
+            // 修正文章目录的left-border颜色
+            var color = $('.table-of-contents-text').css('color');
+            $('.table-of-contents-link').css('border-left-color', color);
+
+            // 针对移动端做的优化：FAB按钮点击一下收回
+            if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+                $('.fixed-action-btn').addClass('click-to-toggle');
+            }
+            // 回到顶部
+            $('.btn-return-top').click(function() {
+                $('body, html').animate({
+                    scrollTop: 0
+                }, 500);
+            });
+
+            // 重置读书页面的Tab标签页的颜色
+            $('li.tab a').hover(function() {
+                $(this).toggleClass('text-lighten-4');
+            });
+            $('.indicator').addClass('green lighten-2');
+
+            
+            // 添加new标签
+            $('.menu-reading').append('<span class="new badge pink"></span>');
+            
+
+            // 搜索功能
+            $('.modal-trigger').leanModal({
+                // 打开搜索框时自动聚焦
+                ready: function() {
+                    if ($('#search').is(":visible")) {
+                        $('#search-input').focus();
+                    }
+                }
+            });
+            var searchXml = "search.xml";
+            if (searchXml.length == 0) {
+             	searchXml = "search.xml";
+            }
+            var searchPath = "/" + searchXml;
+            initSearch(searchPath, 'search-input', 'search-result');
+        });
+
+        // 初始化搜索与匹配函数
+        var initSearch = function(path, search_id, content_id) {
+            'use strict';
+            $.ajax({
+                url: path,
+                dataType: "xml",
+                success: function(xmlResponse) {
+                    // get the contents from search data
+                    var datas = $("entry", xmlResponse).map(function() {
+                        return {
+                            title: $("title", this).text(),
+                            content: $("content", this).text(),
+                            url: $("url", this).text()
+                        };
+                    }).get();
+                    var $input = document.getElementById(search_id);
+                    var $resultContent = document.getElementById(content_id);
+                    $input.addEventListener('input', function() {
+                        var str = '<ul class=\"search-result-list\">';
+                        var keywords = this.value.trim().toLowerCase().split(/[\s\-]+/);
+                        $resultContent.innerHTML = "";
+                        if (this.value.trim().length <= 0) {
+                            return;
+                        }
+                        // perform local searching
+                        datas.forEach(function(data) {
+                            var isMatch = true;
+                            var content_index = [];
+                            var data_title = data.title.trim().toLowerCase();
+                            var data_content = data.content.trim().replace(/<[^>]+>/g, "").toLowerCase();
+                            var data_url = data.url;
+                            var index_title = -1;
+                            var index_content = -1;
+                            var first_occur = -1;
+                            // only match artiles with not empty titles and contents
+                            if (data_title != '' && data_content != '') {
+                                keywords.forEach(function(keyword, i) {
+                                    index_title = data_title.indexOf(keyword);
+                                    index_content = data_content.indexOf(keyword);
+                                    if (index_title < 0 && index_content < 0) {
+                                        isMatch = false;
+                                    } else {
+                                        if (index_content < 0) {
+                                            index_content = 0;
+                                        }
+                                        if (i == 0) {
+                                            first_occur = index_content;
+                                        }
+                                    }
+                                });
+                            }
+                            // show search results
+                            if (isMatch) {
+                                keywords.forEach(function(keyword) {
+                                    var regS = new RegExp(keyword, "gi");
+                                    data_title = data_title.replace(regS, "<span class=\"search-keyword green lighten-2\">" + keyword + "</span>");
+                                });
+
+                                str += "<li><a href='" + data_url + "' class='search-result-title'>" + data_title + "</a>";
+                                var content = data.content.trim().replace(/<[^>]+>/g, "");
+                                if (first_occur >= 0) {
+                                    // cut out 100 characters
+                                    var start = first_occur - 20;
+                                    var end = first_occur + 80;
+                                    if (start < 0) {
+                                        start = 0;
+                                    }
+                                    if (start == 0) {
+                                        end = 100;
+                                    }
+                                    if (end > content.length) {
+                                        end = content.length;
+                                    }
+                                    var match_content = content.substring(start, end);
+                                    // highlight all keywords
+                                    keywords.forEach(function(keyword) {
+                                        var regS = new RegExp(keyword, "gi");
+                                        match_content = match_content.replace(regS, "<span class=\"search-keyword green lighten-2\">" + keyword + "</span>");
+                                    });
+
+                                    str += "<p class=\"search-result\">..." + match_content + "...</p>"
+                                }
+                                str += "</li>";
+                            }
+                        });
+                        str += "</ul>";
+                        $resultContent.innerHTML = str;
+                    });
+                }
+            });
+        }
+    })(jQuery);
+</script>
+
+
+<script src="/js/prettify.js"></script>
+<script type="text/javascript">
+    $(document).ready(function() {
+        $("pre").addClass("prettyprint");
+        prettyPrint();
+    });
+</script>
+
+
+
+
+
+
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+  tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}
+});
+</script>
+<script type="text/javascript" async src="//cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-MML-AM_CHTML">
+</script>
+
+
+
+</body>
+</html>

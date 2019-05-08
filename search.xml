@@ -1,0 +1,435 @@
+<?xml version="1.0" encoding="utf-8"?>
+<search> 
+  
+    
+    <entry>
+      <title>学习基于深度学习的目标检测框架</title>
+      <link href="/2019/05/08/%E7%AC%AC%207%20%E5%91%A8%E5%AD%A6%E4%B9%A0%E5%88%86%E4%BA%AB/"/>
+      <content type="html"><![CDATA[<p>总结R-CNN、SPP-NET、Fast R-CNN、Faster R-CNN、YOLO(v1 v2)、SSD <a href="https://handong1587.github.io/deep_learning/2015/10/09/object-detection.html#fast-r-cnn" target="_blank" rel="noopener">参考</a><br><a id="more"></a></p><h3 id="提前的总结"><a href="#提前的总结" class="headerlink" title="提前的总结"></a>提前的总结</h3><h4 id="方案1-候选区域-深度学习回归（two-stage）"><a href="#方案1-候选区域-深度学习回归（two-stage）" class="headerlink" title="方案1.候选区域 + 深度学习回归（two stage）"></a>方案1.候选区域 + 深度学习回归（two stage）</h4><p><a href="http://arxiv.org/abs/1311.2524" target="_blank" rel="noopener">R-CNN</a>，2014（Selective Search + CNN + SVM），首先预选2000个框</p><p><a href="http://arxiv.org/abs/1406.4729" target="_blank" rel="noopener">SPP-Net</a>，2015（ROI Pooling），一次卷积，不限制输入尺寸</p><p><a href="http://arxiv.org/abs/1504.08083" target="_blank" rel="noopener">Fast R-CNN</a>，2015（Selective Search + CNN + ROI），结合R-CNN和SPP-Net的思路。将分类和回归都加入到网络中进行训练，做成了端到端。</p><p><a href="http://arxiv.org/abs/1506.01497" target="_blank" rel="noopener">Faster R-CNN</a>，2015（RPN + CNN + ROI），用RPN来求候选框，同时引入anchor机制来应对目标形变问题。</p><h4 id="方案2-深度学习回归（one-stage）"><a href="#方案2-深度学习回归（one-stage）" class="headerlink" title="方案2. 深度学习回归（one stage）"></a>方案2. 深度学习回归（one stage）</h4><p><a href="http://arxiv.org/abs/1506.02640" target="_blank" rel="noopener">YOLO v1</a>，2016（回归任务）</p><p><a href="https://arxiv.org/abs/1612.08242" target="_blank" rel="noopener">YOLO v2</a>，2017，引入Faster R-CNN的anchor机制</p><p><a href="http://arxiv.org/abs/1512.02325" target="_blank" rel="noopener">SSD</a>，2016，结合YOLO的回归和Faster R-CNN的anchor</p><hr><h3 id="细节讨论"><a href="#细节讨论" class="headerlink" title="细节讨论"></a>细节讨论</h3><h4 id="1-R-CNN"><a href="#1-R-CNN" class="headerlink" title="1.R-CNN"></a>1.R-CNN</h4><ol><li>候选区域：利用颜色、纹理、边缘信息，使用selective search提取一定（2000）的框（在保持较高的recall情况下）。对于每个框的区域，需要修正区域大小，以适合于CNN的输入，并提取特征。</li><li>SVM分类：训练一个二分类SVM，来判断当前候选框里物体的类别。</li><li>回归：使用回归来修正候选框的位置。</li><li><strong>问题1</strong>：对2000个框都要进行CNN，框与框有重叠，时间复杂度高，在重叠区域的计算是不必要的，因此可以提速。</li><li><strong>问题2</strong>：框的尺寸不一，需要resize，但是resize就会出现失真的问题。肯定会影响精度。</li></ol><h4 id="2-SPP-Net"><a href="#2-SPP-Net" class="headerlink" title="2.SPP-Net"></a>2.SPP-Net</h4><p>针对R-CNN的两个问题，SPP-Net就被提出来了。</p><ol><li>ROI Pooling：在普通的CNN结构中加入了ROI Pooling，其中的pooling filter可根据输入调整大小，使得输出是一个固定维度的向量，输入可以是任意的尺寸。然后给到全连接FC层。</li><li>对原图只做一次卷积，首先得到整张图的feature map，再找到每个候选框在feature map上所对应的区域，将这个区域的特征输入到ROI Pooling，完成特征提取的工作。</li></ol><h4 id="3-Fast-R-CNN"><a href="#3-Fast-R-CNN" class="headerlink" title="3.Fast R-CNN"></a>3.Fast R-CNN</h4><p>在R-CNN的基础上结合了SPP-Net的思路，相比原来R-CNN，使用一次卷积；在最后一次卷积后添加了ROI Pooling；将边框回归直接加入到了CNN网络中，因此做成了端到端网络。</p><p>R-CNN分为三个阶段，Fast R-CNN使用softmax来代替SVM，边框回归也加入到网络中，因此成为了端到端的网络。<strong>这可以为后面改进阶段性的算法作为一个重要的提示</strong></p><p>R-CNN的方法：2000个候选框,resize -&gt; CNN提取特征 -&gt; 分类+回归</p><p>Fast R-CNN方法:原始图片 -&gt; CNN -&gt; ROI Pooling -&gt; 分类+回归</p><p>相比R-CNN训练速度提升了8.8x， 测试速度提升了146x</p><p><strong>问题</strong> Selective Search寻找候选框非常耗时，</p><h4 id="4-Faster-R-CNN"><a href="#4-Faster-R-CNN" class="headerlink" title="4.Faster R-CNN"></a>4.Faster R-CNN</h4><p>引入RPN网络代替selective search，使用RPN来搜索候选框，同时引入anchor box应对目标形状的变化问题。</p><ol><li>RPN：将RPN放在最后一个卷积层后面，所以RPN是作用在feature map上的，RPN包含分类和边框回归两个任务，分类器判断框属于的类别，边框回归进一步的优化/精细候选框。</li></ol><hr><h4 id="5-YOLO-v1"><a href="#5-YOLO-v1" class="headerlink" title="5.YOLO v1"></a>5.YOLO v1</h4><p><em>two stage</em>的方案不能满足实时性要求，所以one stage的出来了。</p><ol><li>首先将图像划分为7x7的网格</li><li>对于每个网格，都预测2个边框（包括边框是目标的置信度和类别概率），最终可以得到7x7x2个边框，再经过NMS，即可得到最终的回归框。</li><li><strong>问题1</strong>：只是用7x7的网格，使得回归的精度不够高。而且当每个格子中包含多个物体（&gt;2）时，不能被检测出来。</li><li><strong>问题2</strong>：输入图像输入resize到224*224</li></ol><h4 id="6-YOLO-v2"><a href="#6-YOLO-v2" class="headerlink" title="6.YOLO v2"></a>6.YOLO v2</h4><p>引入了Faster R-CNN的anchor box机制，并使用卷积层代替YOLO v1的全连接层，所以对输入图像不需要resize了。</p><ol><li>改进anchor box：Faster R-CNN中需要首选anchor box，而v2中采用k-means在许多框中进行聚类，以产生合适的框，同时使用过IOU作为k-means的距离计算。</li><li>引入skip layer：借鉴ResNet的思想，使得网络更深。</li></ol><h4 id="7-SSD"><a href="#7-SSD" class="headerlink" title="7.SSD"></a>7.SSD</h4><p>SSD结合了YOLO回归的思想和Faster R-CNN的anchor box机制，YOLO中预测某个位置使用的全图特征，SSD预测某个位置使用的这个位置周围的特征。</p><p>同时SSD的anchor是在多个feature map上进行的，这样就可以做的多尺度。</p>]]></content>
+      
+      <categories>
+          
+          <category> 周总结 </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> deep learning </tag>
+            
+            <tag> YOLO </tag>
+            
+            <tag> 目标检测 </tag>
+            
+            <tag> R-CNN系列 </tag>
+            
+            <tag> SSD </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    <entry>
+      <title>FCN 论文总结</title>
+      <link href="/2019/05/04/%E7%AC%AC%206%20%E5%91%A8%E5%AD%A6%E4%B9%A0%E5%88%86%E4%BA%AB/"/>
+      <content type="html"><![CDATA[<p>FCN，于2015年被Jonathan提出，是应用在Semantic segmentation中，下面总结与CNN有何不同，以及它的优缺点。<br><a id="more"></a></p><p>2015年Jonathan发表了<a href="https://arxiv.org/pdf/1411.4038.pdf" target="_blank" rel="noopener">《Fully Convolutional Networks for Semantic Segmentation》</a>将FCN应用在了语义分割中。</p><h5 id="1-CNN与FCN有何不同？"><a href="#1-CNN与FCN有何不同？" class="headerlink" title="1. CNN与FCN有何不同？"></a>1. CNN与FCN有何不同？</h5><h5 id="1-1-网络结构上的不同"><a href="#1-1-网络结构上的不同" class="headerlink" title="1.1 网络结构上的不同"></a>1.1 网络结构上的不同</h5><p>CNN通常在卷积层之后会接上若干个全连接层，将卷积层产生的特征映射为固定长度的特征向量。如经典的AlexNet，最后输出1000维的特征向量，再用Softmax做分类。CNN的输入尺寸一般是固定的。</p><p>FCN，所有层都是卷积层，可以接受任意尺寸的输入图像，采用反卷积对FCN中最后一个卷积层的特征图<strong>上采样</strong>，使它恢复到输入图像相同的尺寸，最后逐个像素计算softmax分类的损失，相当于每一个像素对应一个训练样本，如图1所示。<br><img src="https://images2015.cnblogs.com/blog/829125/201701/829125-20170104183245769-878631707.png" alt="FCN"></p><h5 id="1-2-在分割任务上的不同"><a href="#1-2-在分割任务上的不同" class="headerlink" title="1.2 在分割任务上的不同"></a>1.2 在分割任务上的不同</h5><p>基于CNN的分割方法，为了对一个像素进行分类，需要使用该像素周围的像素区域作为CNN的输入。这样做有几个缺点：a.存储开销大，存储空间依赖卷积核的大小和卷积的次数。b.计算效率低，因为卷积会有很多重复计算。c.CNN提取局部特征，受限于卷积核的大小限制。</p><p>而在FCN中，是进行的像素级任务，可以对每个像素进行分类。（<strong>我觉得主要解决的还是上面的缺点c</strong>）</p><h5 id="2-全连接层与卷积层"><a href="#2-全连接层与卷积层" class="headerlink" title="2. 全连接层与卷积层"></a>2. 全连接层与卷积层</h5><p>全连接层与卷积层是可以相互转换的。利用1*1卷积即可。</p><h4 id="3-如何保持输出与输入尺寸相同？"><a href="#3-如何保持输出与输入尺寸相同？" class="headerlink" title="3. 如何保持输出与输入尺寸相同？"></a>3. 如何保持输出与输入尺寸相同？</h4><p>保留每个池化层的feature map,将最后一个池化层之后的结果（heatMap）进行上采样（双线性插值），然后依次使用上层的卷积核对上采样结果进行反卷积，最终就得到了与输入尺寸相同的图像。</p><h4 id="4-缺点"><a href="#4-缺点" class="headerlink" title="4.缺点"></a>4.缺点</h4><p>缺点显而易见，进行的是像素级任务，那自然就抛弃了像素之间的关系——空间一致性。</p><p>上采样的结果比较模糊，不能注意到图像的细节。</p>]]></content>
+      
+      <categories>
+          
+          <category> 周总结 </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> deep learning </tag>
+            
+            <tag> FCN </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    <entry>
+      <title>GN 论文总结</title>
+      <link href="/2019/04/28/%E7%AC%AC%205%20%E5%91%A8%E5%AD%A6%E4%B9%A0%E5%88%86%E4%BA%AB/"/>
+      <content type="html"><![CDATA[<p>GN(Group Normalization)解决了在Batch Size太小时BN失效的问题。总结如下：</p><a id="more"></a><h3 id="唐洋的学习心得"><a href="#唐洋的学习心得" class="headerlink" title="唐洋的学习心得"></a>唐洋的学习心得</h3><p>介绍GN之前，先回顾下BN。</p><h5 id="1-BN的优点"><a href="#1-BN的优点" class="headerlink" title="1. BN的优点"></a>1. BN的优点</h5><ul><li>BN可以使网络中每层输入数据的分布相对稳定，加速模型的学习速度</li><li>BN可以使模型对网络中的参数不那么敏感，简化调参过程，使得网络学习更加稳定</li><li>BN可以允许网络使用饱和性激活函数（sigmoid &amp; tanh），缓解梯度消失问题</li><li>BN具有一定的正则化效果</li></ul><h4 id="2-BN的缺点"><a href="#2-BN的缺点" class="headerlink" title="2. BN的缺点"></a>2. BN的缺点</h4><p>先不管它应用在什么任务（像素级图片生成）或网络（RNN）上面会有缺陷。</p><ul><li>对于限制了Batch Size的任务来说，BN会失效</li><li>对于训练时计算的均值和方差，在验证和测试的时候并不适用（如果训练、验证、测试集的分布不同）</li></ul><h4 id="3-GN"><a href="#3-GN" class="headerlink" title="3. GN"></a>3. GN</h4><p>GN <a href="https://arxiv.org/pdf/1803.08494.pdf" target="_blank" rel="noopener">here</a> 抛弃了对Batch Size大小的依赖，是BN的一种替代方法。</p><p>Group的思想来自于：AlexNet的group convolutions，MobileNet &amp; Xception 的channel-wise convolutions, ShuffleNet的channle shuffle operation，SIFT、HOG的group wise 金字塔等。</p><p><img src="https://github.com/facebookresearch/Detectron/blob/master/projects/GN/gn.jpg" alt="GN示意图"></p><p><strong>Normalization methods</strong>. Each subplot shows a feature map tensor, with N as the batch axis, C as the channel axis, and (H, W) as the spatial axes. The pixels in blue are normalized by the same mean and variance, computed by aggregating the values of these pixels. In rightmost figure, which is a simple case of 2 groups (G = 2) each having 3 channels.</p><p><strong>主要步骤</strong>：首先将Channels划分为多个groups，再计算每个group内的均值μ和方差σ，以进行归一化。</p><h5 id="3-1-如何划分groups？"><a href="#3-1-如何划分groups？" class="headerlink" title="3.1 如何划分groups？"></a>3.1 如何划分groups？</h5><p>也就是我上周总结中提到的几何S如何确定。</p><p><strong>首先在2D图像中，使用4D向量来表示,(N,C,H,W),N表示batch axis, C表示channel axis,H &amp; W表示height &amp; width axis</strong>.</p><ul><li>BN是在同一个C axis上进行，即计算μ和σ是在（N, H, W）axes.</li><li>LN (layer)是在同一个N axis上进行，即计算μ和σ是在(C, H, W) axes.</li><li>IN (Instance)是在同一个N axis和C axis上进行，即计算μ和σ是在(H,W) axes.</li><li>GN也是在同一个N axis 和C axis上进行，计算μ和σ是在(H,W) axes和C/G channels.</li></ul><p>GN计算公式是原文的公式1（也是其他几种Normalization的方法的计算公式，只是集合S的确定方式不同），其中μ和σ如原文公式2所示，确定集合S的公式如公式7所示。</p><p>GN公式中(原文公式7)，G表示分组数量（默认32），C/G表示每组的通道数量，计算示意图如上图中的最右边，例子中G=2，每组的channels=3.</p><h5 id="3-2-代码实现-tf"><a href="#3-2-代码实现-tf" class="headerlink" title="3.2 代码实现(tf)"></a>3.2 代码实现(tf)</h5><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">def GroupNorm(x, gamma, beta, G, eps=1e-5):</span><br><span class="line"># x: input features with shape [N, C, H, W]</span><br><span class="line"># gamma: beta: scale and offset, with shape [1, C, 1, 1]</span><br><span class="line"># G: number of groups for GN</span><br><span class="line">N, G, H, W = x.shape</span><br><span class="line">x = tf.reshape(x, [N, G, C//G, H, W])</span><br><span class="line"></span><br><span class="line"># [2,3,4]表示 G,H,W axes</span><br><span class="line">mean, var = tf.nn.moments(x, [2,3,4], keep_dim=True)</span><br><span class="line">x = (x - mean) / tf.sqrt(var + eps)</span><br><span class="line"></span><br><span class="line">x = tf.reshape(x, [N, C, H, W])</span><br><span class="line"></span><br><span class="line">return x * gamma + beta</span><br></pre></td></tr></table></figure>]]></content>
+      
+      <categories>
+          
+          <category> 周总结 </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> deep learning </tag>
+            
+            <tag> GN </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    <entry>
+      <title>深度学习中的Normalization模型</title>
+      <link href="/2019/04/20/%E7%AC%AC%204%20%E5%91%A8%E5%AD%A6%E4%B9%A0%E5%88%86%E4%BA%AB/"/>
+      <content type="html"><![CDATA[<p>主要学习了BN、Layer Normalization、Instance Normalization及Group Normalization,具体如下：<br><a id="more"></a></p><ol><li><p>Normalization到底是在做什么？</p><p> 规范化就是希望对x进行一定的变换（规范化函数），使得规范化后的数值满足一定的特性。</p><p> 至于深度学习中的Normalization，因为神经网络里主要有两类实体：神经元或者连接神经元的边，所以按照规范化操作涉及对象的不同可以分为两大类，一类是对第L层每个神经元的激活值或者说对于第L+1层网络神经元的输入值进行Normalization操作，比如BatchNorm/LayerNorm/InstanceNorm/GroupNorm等方法都属于这一类；另外一类是对神经网络中连接相邻隐层神经元之间的边上的权重进行规范化操作，比如Weight Norm就属于这一类。广义上讲，一般机器学习里看到的损失函数里面加入的对参数的的L1/L2等正则项，本质上也属于这第二类规范化操作。L1正则的规范化目标是造成参数的稀疏化，就是争取达到让大量参数值取得0值的效果，而L2正则的规范化目标是有效减小原始参数值的大小。有了这些规范目标，通过具体的规范化手段来改变参数值，以达到避免模型过拟合的目的。</p></li><li><p>Normalization加入的位置？</p><p> 第一种是原始BN论文提出的，放在激活函数之前；另外一种是后续研究提出的，放在激活函数之后，不少研究表明将BN放在激活函数之后效果更好。</p><h3 id="公式为：ainorm-γi-ai-μ-δi-βi"><a href="#公式为：ainorm-γi-ai-μ-δi-βi" class="headerlink" title="公式为：ainorm=γi * (ai - μ)/δi + βi"></a>公式为：<strong>a<sub>i</sub><sup>norm</sup>=γ<sub>i</sub> * (a<sub>i</sub> - μ)/δ<sub>i</sub> + β<sub>i</sub></strong></h3><p> 其中,μ和δ分别为神经元集合S的均值和标准差。</p><h3 id="不同Normalization方法确定S集合的方式不同。"><a href="#不同Normalization方法确定S集合的方式不同。" class="headerlink" title="不同Normalization方法确定S集合的方式不同。"></a>不同Normalization方法确定S集合的方式不同。</h3></li><li><p>Batch Normalization 如何做？</p><p> 3.1. 前向神经网络中的BN</p><p> 对于前向神经网络来说，BatchNorm在计算隐层某个神经元k激活的规范值的时候，对应的神经元集合S范围是如何划定呢？因为对于Mini-Batch训练方法来说，根据Loss更新梯度使用Batch中所有实例来做，所以对于神经元k来说，假设某个Batch包含n个训练实例，那么每个训练实例在神经元k都会产生一个激活值，也就是说Batch中n个训练实例分别通过同一个神经元k的时候产生了n个激活值，BatchNorm的集合S选择入围的神经元就是这n个同一个神经元被Batch不同训练实例激发的激活值。划定集合S的范围后，采用上述公式即可完成规范化操作。</p><p> 3.2 CNN网络中的BN</p><p> 那么在卷积层中，如果要对通道激活二维平面中某个激活值进行Normalization操作，怎么确定集合S的范围呢？类似于前向神经网络中的BatchNorm计算过程，对于Mini-Batch训练方法来说，反向传播更新梯度使用Batch中所有实例的梯度方向来进行，所以对于CNN某个卷积层对应的输出通道k来说，假设某个Batch包含n个训练实例，那么每个训练实例在这个通道k都会产生一个二维激活平面，也就是说Batch中n个训练实例分别通过同一个卷积核的输出通道k的时候产生了n个激活平面。假设激活平面长为5，宽为4，则激活平面包含20个激活值，n个不同实例的激活平面共包含20*n个激活值。那么BatchNorm的集合S的范围就是由这20*n个同一个通道被Batch不同训练实例激发的激活平面中包含的所有激活值构成。划定集合S的范围后，激活平面中任意一个激活值都需进行Normalization操作，采用上述公式即可完成规范化操作。这样即完成CNN卷积层的BatchNorm转换过程。</p><p> 从理论上讲，类似的BatchNorm操作也可以应用在RNN上，事实上也有不少研究做了尝试，但是各种实验证明其实这么做没什么用。</p><p> 3.3 Batch Norm的缺点</p><ul><li>如果Batch Size太小，则BN效果明显下降。</li><li>对于有些像素级图片生成任务来说，BN效果不佳。</li><li>RNN等动态网络使用BN效果不佳且使用起来不方便。</li><li><p>训练时和推理时统计量不一致</p><p>上面所列BN的四个缺点，表面看是四个问题，其实深入思考，都指向了幕后同一个黑手，这个隐藏在暗处的黑手是谁呢？就是BN要求计算统计量的时候必须在同一个Mini-Batch内的实例之间进行统计，因此形成了Batch内实例之间的相互依赖和影响的关系。如何从根本上解决这些问题？一个自然的想法是：把对Batch的依赖去掉，转换统计集合范围。在统计均值方差的时候，不依赖Batch内数据，只用当前处理的单个训练数据来获得均值方差的统计量，这样因为不再依赖Batch内其它训练数据，那么就不存在因为Batch约束导致的问题。在BN后的几乎所有改进模型都是在这个指导思想下进行的。</p></li></ul></li><li><p>Layer Normalization 如何做？</p><p> 为了能够在只有当前一个训练实例的情形下，也能找到一个合理的统计范围，一个最直接的想法是：前向神经网络(如MLP)的同一隐层自己包含了若干神经元；同理，CNN中同一个卷积层包含k个输出通道，每个通道包含m*n个神经元，整个通道包含了k*m*n个神经元；类似的，RNN的每个时间步的隐层也包含了若干神经元。那么我们完全可以直接用同层隐层神经元的响应值作为集合S的范围来求均值和方差。这就是Layer Normalization的基本思想。</p><p> BN在RNN中用起来很不方便，而Layer Normalization这种在同隐层内计算统计量的模式就比较符合RNN这种动态网络，目前在RNN中貌似也只有LayerNorm相对有效，但Layer Normalization目前看好像也只适合应用在RNN场景下，在CNN等环境下效果是不如BatchNorm或者GroupNorm等模型的。</p></li><li><p>Instance Normalization 如何做？</p><p> Layer Normalization在抛开对Mini-Batch的依赖目标下，为了能够统计均值方差，很自然地把同层内所有神经元的响应值作为统计范围，那么我们能否进一步将统计范围缩小？对于CNN明显是可以的，因为同一个卷积层内每个卷积核会产生一个输出通道，而每个输出通道是一个二维平面，也包含多个激活神经元，自然可以进一步把统计范围缩小到单个卷积核对应的输出通道内部。对于图中某个卷积层来说，每个输出通道内的神经元会作为集合S来统计均值方差。</p><p> 对于RNN或者MLP，如果在同一个隐层类似CNN这样缩小范围，那么就只剩下单独一个神经元，输出也是单值而非CNN的二维平面，这意味着没有形成集合S，所以RNN和MLP是无法进行Instance Normalization操作的，这个很好理解。</p></li><li><p>Group Normalization 如何做？</p><p> 从Layer Normalization和Instance Normalization可以看出，这是两种极端情况，Layer Normalization是将同层所有神经元作为统计范围，而Instance Normalization则是CNN中将同一卷积层中每个卷积核对应的输出通道单独作为自己的统计范围。那么，有没有介于两者之间的统计范围呢？通道分组是CNN常用的模型优化技巧，所以自然而然会想到对CNN中某一层卷积层的输出或者输入通道进行分组，在分组范围内进行统计。这就是Group Normalization的核心思想，是Facebook何凯明研究组2017年提出的改进模型。</p></li><li><p>BN为何有效？</p><p> 原始的BN论文给出的解释是BN可以解决神经网络训练过程中的ICS（Internal Covariate Shift）问题，所谓ICS问题，指的是由于深度网络由很多隐层构成，在训练过程中由于底层网络参数不断变化，导致上层隐层神经元激活值的分布逐渐发生很大的变化和偏移，而这非常不利于有效稳定地训练神经网络。<strong>不过后来经过学者研究发现BN和ICS并没有什么关系</strong></p><p> BN与损失曲面有关，在深度网络叠加大量非线性函数方式来解决非凸复杂问题时，损失曲面形态异常复杂，大量空间坑坑洼洼相当不平整，也有很多空间是由平坦的大量充满鞍点的曲面构成，训练过程就是利用SGD在这个复杂平面上一步一步游走，期望找到全局最小值，也就是曲面里最深的那个坑。所以在SGD寻优时，在如此复杂曲面上寻找全局最小值而不是落入局部最小值或者被困在鞍点动弹不得，可想而知难度有多高。</p><p> 研究表明，BN真正的用处在于：通过上文所述的Normalization操作，使得网络参数重整（Reparametrize），它对于非线性非凸问题复杂的损失曲面有很好的平滑作用，参数重整后的损失曲面比未重整前的参数损失曲面平滑许多(平滑程度用L-Lipschitz函数来评估)。</p></li><li><p><strong>总结</strong></p><p> 所有Normalization模型都采取了类似的步骤和过程，将神经元的激活值重整为均值为0方差为1的新数值，最大的不同在于计算统计量的神经元集合S的划分方法上。BN采用了同一个神经元，但是来自于Mini-Batch中不同训练实例导致的不同激活作为统计范围。而为了克服Mini-Batch带来的弊端，后续改进方法抛弃了Mini-Batch的思路，只用当前训练实例引发的激活来划分集合S的统计范围，概括而言，LayerNorm采用同隐层的所有神经元；InstanceNorm采用CNN中卷积层的单个通道作为统计范围，而GroupNorm则折衷两者，采用卷积层的通道分组，在划分为同一个分组的通道内来作为通道范围。</p><p> <strong>使用场景:</strong> 对于RNN的神经网络结构来说，目前只有LayerNorm是相对有效的；如果是GAN等图片生成或图片内容改写类型的任务，可以优先尝试InstanceNorm；如果使用场景约束BatchSize必须设置很小，无疑此时考虑使用GroupNorm；而其它任务情形应该优先考虑使用BatchNorm。</p></li></ol>]]></content>
+      
+      <categories>
+          
+          <category> 周总结 </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> deep learning </tag>
+            
+            <tag> GN </tag>
+            
+            <tag> Normalization </tag>
+            
+            <tag> BN </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    <entry>
+      <title>YOLO &amp; Attention</title>
+      <link href="/2019/04/13/%E7%AC%AC%203%20%E5%91%A8%E5%AD%A6%E4%B9%A0%E5%88%86%E4%BA%AB/"/>
+      <content type="html"><![CDATA[<p>这周准备了3场笔试，所以学习新知识的时间不多。主要将Andrew Ng的深度学习课程的最后一节序列模型和注意力机制学完了，同时回顾了一下前面学习的YOLO算法，下面做一个总结。。</p><a id="more"></a><ol><li>YOLO (v1）：</li></ol><ul><li>YOLO算法，首先将图像网格化，然后将目标按中心所在位置分配给所在格子，然后利用卷积网络的参数共享特性，只需要一次卷积就可以得出结果，加速计算，能做到实时。</li><li>对每个格子都预测B个bounding boxes，每个bounding box都包含5个预测值：x,y,w,h和confidence，在原文中作者取S=7，B=2.</li><li>为了解决有很多检测框的问题，h和confidence，保留最大的，其他的删除。</li><li>为了解决有多个目标出现在同一个grid里的情况，通过预先设置Anchor box模板，来解决，假设会有2个目标同时出现在同一个grid中，行人和汽车，就设置两个Anchor box1和Anchor box2，同时将输出y，这里y里面的元素就会有10个了。再对于每个类别，单独运行非极大值抑制，就可以得到最后的结果。</li><li>如何选择anchor box：<br>1、可以人工的指定Anchor box的形状，使其包含训练集中的大多数样本，个数一般5-10个左右。<br>2、还有更好的做法，k-means算法，对形状进行聚类。</li></ul><ol start="2"><li><p>Attention：<br>Attention说白了是做一个向量加权，在NLP、语音和图像描述等方面上得到了应用。</p><p> 2.1. Attention的定义：</p><ul><li><p>给定一组向量集合values，以及一个向量query，attention机制是一种根据该query计算values的加权求和的机制。</p></li><li><p>attention的重点就是这个集合values中的每个value的“权值”的计算方法。</p></li><li><p>有时候也把这种attention的机制叫做query的输出关注了（或者说叫考虑到了）原文的不同部分</p></li></ul><p>通过计算Attention Scores，然后利用softmax函数将其概率化。</p><p> 2.2. Attention的变体</p><ul><li>soft attention、global attention、动态attention</li><li>Hard attention</li><li>local attention</li><li>静态attention</li><li>强制前向attention</li><li>self attention</li><li>key-value attention</li><li>multi-head attention</li></ul></li></ol>]]></content>
+      
+      <categories>
+          
+          <category> 周总结 </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> deep learning </tag>
+            
+            <tag> YOLO </tag>
+            
+            <tag> Attention </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    <entry>
+      <title>准备笔试 &amp; NLP基础</title>
+      <link href="/2019/04/06/%E7%AC%AC%202%20%E5%91%A8%E5%AD%A6%E4%B9%A0%E5%88%86%E4%BA%AB/"/>
+      <content type="html"><![CDATA[<a id="more"></a><ol><li>图像基础复习：<br>①：相机模型参数，相机畸变系数及矫正;相机模型参数分为内参与外参，内参有焦距f、像素宽度dx和像素高度dy、相机主点u0、v0，外参有R和T。畸变分为径向畸变（桶型、枕型）和切向畸变，前者有k1、k2、k3、k4 4个系数，后者有p1、p2 2个系数。矫正公式略。<br>②：常用边缘检测算子，一阶算子：Sobel、Prewitt、Robert、canny；二阶算子：Laplacian，对噪声敏感。Sobel和Prewitt只是权值不同，效果上，Sobel要由于Prewitt，Robert是使用对角差分。其中canny是阶段性算法，分为3个阶段滤波、增强、检测，效果最好。</li><li>NLP基础:<br>①：学习了Word Embedding，它包含了词与词之间的关系，将一个词用一定维度的向量来表示，作为网络的输入。<br>②：如何训练Word Embedding，通常采用context-target pairs的方法，Context的选定有：Last 4 words、4 words on left &amp; right、Last 1 word、Nearby 1 word，通过这种方式来构造监督学习的样本。现成的方案有基于CBOW 的 Word2Vec方法和基于Skip-Gram的Word2Vec方法，CBOW方案是使用周围的词来预测中间的词，Skip-Gram是使用中间的词来预测周围的词，Skip-Gram使用的要多一点。但Skip-Gram中使用softmax进行分类，针对大数据集，softmax的分母计算较耗时，所以出现了层级softmax（二叉树）、Negative Sampling（使用1个正样本，k个负样本来组成一次迭代的样本）。<br>③：GloVe：比较简单的Word Embedding方法，通过对一个公式求最小化的参数即可。<br>④：用RNN来做情感分类，首先下载已经训练好的Word Embedding，然后将分词的结果通过Word Embedding转换为词向量，再通过搭建好的RNN来进行做情感分类。</li></ol>]]></content>
+      
+      <categories>
+          
+          <category> 周总结 </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> NLP基础 </tag>
+            
+            <tag> CV基础 </tag>
+            
+            <tag> 相机模型 </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    <entry>
+      <title>风格迁移与序列模型研究</title>
+      <link href="/2019/03/30/%E7%AC%AC%201%20%E5%91%A8%E5%AD%A6%E4%B9%A0%E5%88%86%E4%BA%AB/"/>
+      <content type="html"><![CDATA[<a id="more"></a><ol><li>风格迁移：将一副图片的风格迁移到另一幅新的图片中。<ul><li>a. 使用两张图片作为输入（如一张毕加索的图S，一张普通照片C）生成一张新的图片G；</li><li>b. 风格迁移需要定义它的损失函数，内容损失L_content和风格损失L_style，整体损失为L=αL_content(C, G) + βL_style(S, G)； </li><li>c. 有了输入和损失函数，就可以来训练网络了，S和C都是已知的，那G怎么初始化呢？一般采用随机数来填充整幅图像；</li><li>d. 那么内容损失函数L_content具体是怎么定义呢？最简单的，取两幅图像像素差值的二范数。；</li><li>e. L_style如何定义呢？这里公式有点复杂，用文字描述就是单独计算S的通道之间像素相关性（像素值相乘）、G的通道之间像素相关性（像素值相乘），之后作差，求Frobenius范数。；有了输入、初始化、损失，就可以使用优化方法对损失函数进行优化了。</li></ul></li><li>序列模型：学习RNN及其变种。<ul><li>a. 序列模型偏向于NLP、语音等方面；</li><li>b. 首先是RNN网络，相比于标准的层级神经网路，RNN可以处理输入数据长度和输出数据长度不同的情况；不能在文本的不同位置共享已学得的特征。但是RNN不能利用后续的信息，在文本处理方面会有一定的局限性，比如Name Entity Recognition。而且RNN不能处理梯度消失的问题，当RNN层数很深的时候，反向传播时，后面的层，不能去影响前面的层的参数。；</li><li>c. GRU网络，可以说它解决了RNN梯度消失的问题，它引入了C(memory cell)来记忆和更新门(gamma_u)来控制是否更新C或者使用old_C。；</li><li>d. LSTM网络，GRU网络是LSTM的简化版本，后者多了遗忘门(gamma_f)和输出门(gamma_o)，使用gamma_u和gamma_f来控制是否更新C，所以GRU更适合搭建复杂网络，相比之下GRU搭建的网络参数会比较少。；</li><li>e. BRNN(Bidirectional RNN)，在RNN的基础上增加了一个反向的RNN，正因为有了双向，所以使得RNN可以使用整段文本的信息，不过这一般需要等待文字/语音输入完毕，不适合于实时系统。；</li><li>f. Deep RNNs，使用RNN、GRU、LSTM作为基本单元，横向、纵向地去搭建更深的网络以完成更复杂的任务。</li></ul></li></ol>]]></content>
+      
+      <categories>
+          
+          <category> 周总结 </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> 风格迁移 </tag>
+            
+            <tag> 序列模型 </tag>
+            
+            <tag> deep learning </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    <entry>
+      <title>深度学习中的卷积和池化</title>
+      <link href="/2018/06/21/%E6%B7%B1%E5%BA%A6%E5%AD%A6%E4%B9%A0%E4%B8%AD%E7%9A%84%E5%8D%B7%E7%A7%AF%E5%92%8C%E6%B1%A0%E5%8C%96/"/>
+      <content type="html"><![CDATA[<h1 id="1-Convolution"><a href="#1-Convolution" class="headerlink" title="1. Convolution"></a>1. Convolution</h1><blockquote><p>卷积是什么？</p><p>卷积在数学上用通俗的话来说就是输入矩阵与卷积核（卷积核也是矩阵）进行对应元素相乘并求和，所以一次卷积的结果的输出是一个数，最后对整个输入输入矩阵进行遍历，最终得到一个结果矩阵，下面通过一个动画使其更直观。</p></blockquote><a id="more"></a><ul><li>卷积动画演示<ul><li>卷积核<br><img src="https://mic-jasontang.github.io/imgs/conv-kernel.png" alt="卷积动画演示"></li></ul></li></ul><p><img src="https://mic-jasontang.github.io/imgs/conv_no_padding.gif" alt="卷积动画演示"></p><p><img src="https://mic-jasontang.github.io/imgs/conv_padding.gif" alt="卷积动画演示"></p><blockquote><p>在上面我们没有使用很专业的数学公式来表示，来解释卷积操作和相关操作，我结合我自己的理解，争取做到白话，及时没有数学基础，也能理解卷积核池化操作。</p><ul><li>卷积的目的</li></ul><p>卷积在图像中的目的就是为了提取特征，我认为这就是深度学习的核心，因为有了卷积层，才避免了我们来手动提取图像的特征，让卷积层自动提取图像的高维度且有效的特征，虽然这没有手动提取特征比如Canny边缘，SIFT，HOG等的强大数学理论基础的支撑，但是卷积层提取的特征让最终的分类、识别结果往往非常的好。比如LeNet-5模型能在MNIST数据集上达到99%的识别率，一般来说网络结构越复杂，越深，往往最终的精确率会越高。</p></blockquote><hr><p><strong>卷积分为许多种，下面将会一一介绍。</strong></p><ul><li>符号约定</li></ul><blockquote><p>i: 输入大小表示为i x i</p><p>k: 卷积核大小表示为k x k</p><p>s: 步长</p><p>p: 填充</p><p>o: 输出表示为o*o</p></blockquote><h2 id="1-1-unit-strides"><a href="#1-1-unit-strides" class="headerlink" title="1.1 unit strides"></a>1.1 unit strides</h2><p>卷积从大体上可以分为单位步长（unit strides)和非单位步长（Non-unit strides），还可以细分为有0填充和无0填充。</p><h3 id="1-1-1-No-zero-padding-unit-strides"><a href="#1-1-1-No-zero-padding-unit-strides" class="headerlink" title="1.1.1  No zero padding, unit strides"></a>1.1.1  No zero padding, unit strides</h3><p><img src="https://mic-jasontang.github.io/imgs/figure2.1.png" alt="figure2.1"></p><p>无零填充 单位步长的卷积，蓝色矩阵是输入（4x4）,深蓝色是卷积核（3x3）,上方绿色是输出（2x2）.输出矩阵大小的计算公式为：<br><img src="https://mic-jasontang.github.io/imgs/figure2.1_2.png" alt="figure2.1"></p><p>动画演示<br><img src="https://mic-jasontang.github.io/imgs/figure2.1.gif" alt="figure2.1"></p><h3 id="1-1-2-Zero-padding-unit-strides"><a href="#1-1-2-Zero-padding-unit-strides" class="headerlink" title="1.1.2 Zero padding, unit strides"></a>1.1.2 Zero padding, unit strides</h3><p><img src="https://mic-jasontang.github.io/imgs/figure2.2.png" alt="figure2.2"></p><p>有零填充（p=2） 单位步长的卷积，蓝色矩阵是输入（5x5）,深蓝色是卷积核（3x3）,上方绿色是输出（6x6）.输出矩阵大小的计算公式为：<br><img src="https://mic-jasontang.github.io/imgs/figure2.2_2.png" alt="figure2.2"></p><p>动画演示<br><img src="https://mic-jasontang.github.io/imgs/figure2.2.gif" alt="figure2.2"></p><h4 id="1-1-2-1-Zero-padding-unit-strides-Half-Same-padding"><a href="#1-1-2-1-Zero-padding-unit-strides-Half-Same-padding" class="headerlink" title="1.1.2.1 Zero padding, unit strides - Half(Same) padding"></a>1.1.2.1 Zero padding, unit strides - Half(Same) padding</h4><p>这种情况叫Half Padding 也叫 Same Padding，因为它能保证输入和输出的尺寸是一致的<br><img src="https://mic-jasontang.github.io/imgs/figure2.3.png" alt="figure2.3"></p><p>有零填充（p=1） 单位步长的卷积，蓝色矩阵是输入（5x5）,深蓝色是卷积核（3x3）,上方绿色是输出（5x5）.输出矩阵大小的计算公式为：<br><img src="https://mic-jasontang.github.io/imgs/figure2.3_2.png" alt="figure2.3"></p><p>动画演示<br><img src="https://mic-jasontang.github.io/imgs/figure2.3.gif" alt="figure2.3"></p><h4 id="1-1-2-2-Zero-padding-unit-strides-Full-padding"><a href="#1-1-2-2-Zero-padding-unit-strides-Full-padding" class="headerlink" title="1.1.2.2 Zero padding, unit strides - Full padding"></a>1.1.2.2 Zero padding, unit strides - Full padding</h4><p>卷积操作产生的输出一般都会减少输入图片的尺寸，但有时候我们需要放大输入图片的尺寸，这个时候就需要使用到Full Padding。<br><img src="https://mic-jasontang.github.io/imgs/figure2.4.png" alt="figure2.4"></p><p>有零填充（p=2） 单位步长的卷积，蓝色矩阵是输入（5x5）,深蓝色是卷积核（3x3）,上方绿色是输出（7x7）.输出矩阵大小的计算公式为：<br><img src="https://mic-jasontang.github.io/imgs/figure2.4_2.png" alt="figure2.4"></p><p>动画演示<br><img src="https://mic-jasontang.github.io/imgs/figure2.4.gif" alt="figure2.4"></p><h2 id="1-2-Non-unit-strides"><a href="#1-2-Non-unit-strides" class="headerlink" title="1.2 Non-unit strides"></a>1.2 Non-unit strides</h2><p>接下来介绍非单位步长（Non-unit stride)的卷积操作，分为有零填充和无零填充。</p><h3 id="1-2-1-No-zero-padding-non-unit-strides"><a href="#1-2-1-No-zero-padding-non-unit-strides" class="headerlink" title="1.2.1 No zero padding, non-unit strides"></a>1.2.1 No zero padding, non-unit strides</h3><p><img src="https://mic-jasontang.github.io/imgs/figure2.5.png" alt="figure2.5"></p><p>无零填充 非单位步长（s=2）的卷积，蓝色矩阵是输入（5x5）,深蓝色是卷积核（3x3）,上方绿色是输出（2x2）.输出矩阵大小的计算公式为：</p><p><img src="https://mic-jasontang.github.io/imgs/figure2.5_5.png" alt="figure2.5"></p><p>其中向下取整是为了避免(i-k)/s是小数的情况。</p><p>动画演示<br><img src="https://mic-jasontang.github.io/imgs/figure2.5.gif" alt="figure2.5"></p><h3 id="1-2-2-Zero-padding-non-unit-strides"><a href="#1-2-2-Zero-padding-non-unit-strides" class="headerlink" title="1.2.2 Zero padding, non-unit strides"></a>1.2.2 Zero padding, non-unit strides</h3><p><img src="https://mic-jasontang.github.io/imgs/figure2.6.png" alt="figure2.6"></p><p>有零填充（p=1） 非单位步长（s=2）的卷积，蓝色矩阵是输入（5x5）,深蓝色是卷积核（3x3）,上方绿色是输出（3x3）.输出矩阵大小的计算公式为：<br><img src="https://mic-jasontang.github.io/imgs/figure2.6_2.png" alt="figure2.6"></p><p>其中向下取整是为了避免(i+2p-k)/s是小数的情况。</p><p>动画演示<br><img src="https://mic-jasontang.github.io/imgs/figure2.6.gif" alt="figure2.6"></p><h2 id="1-3-Convolution-as-a-matrix-operation"><a href="#1-3-Convolution-as-a-matrix-operation" class="headerlink" title="1.3 Convolution as a matrix operation"></a>1.3 Convolution as a matrix operation</h2><p>卷积操作也可以被表示为矩阵的形式，比如将1.1.1中的图转化为矩阵，如下图所示：</p><p>1.1.1中的图被表示为如下形式</p><p><img src="https://mic-jasontang.github.io/imgs/conv_as_matrix_2.png" alt="figure2.6"></p><p>矩阵表示的形式</p><p><img src="https://mic-jasontang.github.io/imgs/conv_as_matrix.png" alt="figure2.6"></p><p>我将上面的矩阵划分为了4行，每一行划分为了4列，表示此卷积操作需要进行16次，W0,0 W0,1 …… W2,2我在图中标注了出来。这个矩阵可以这样来看，按行来看，第一行对应于矩阵表示图的第一个图，第二行对应于矩阵表示图的第二个图，一次类推。</p><h1 id="2-Pooling"><a href="#2-Pooling" class="headerlink" title="2. Pooling"></a>2. Pooling</h1><blockquote><p>池化操作是什么？</p><p>池化操作的过程和卷积很类似，但是卷积是用来提取特征的，池化层是用来减少卷积层提取的特征的个数的，可以理解为是为了增加特征的鲁棒性或者是降维。</p></blockquote><blockquote><p>池化操作是什么？</p><p>池化操作的过程和卷积很类似，但是卷积是用来提取特征的，池化层是用来减少卷积层提取的特征的个数的，可以理解为是为了增加特征的鲁棒性或者是降维。</p></blockquote><p>池化分为平均值池化和最大值池化，下面会一一介绍。</p><h2 id="2-1-Average-Pooling"><a href="#2-1-Average-Pooling" class="headerlink" title="2.1 Average Pooling"></a>2.1 Average Pooling</h2><ul><li>平均值池化可以被表示为</li></ul><p><img src="https://mic-jasontang.github.io/imgs/figure1.5.png" alt="figure1.5"></p><ul><li>平均值池化的动画演示</li></ul><p><img src="https://mic-jasontang.github.io/imgs/figure1.5.gif" alt="figure1.6"></p><p>可以看到池化操作也有一个类似于卷积的核，但是这个核不需要提供值，只是表示一个能作用于输入图片的窗口大小。</p><h2 id="2-2-Max-Pooling"><a href="#2-2-Max-Pooling" class="headerlink" title="2.2 Max Pooling"></a>2.2 Max Pooling</h2><ul><li>最大值池化可以被表示为</li></ul><p><img src="https://mic-jasontang.github.io/imgs/figure1.6.png" alt="figure1.6"></p><ul><li>最大值池化的动画演示</li></ul><p><img src="https://mic-jasontang.github.io/imgs/figure1.6.gif" alt="figure1.6"></p><p>可以看到池化操作也有一个类似于卷积的核，但是这个核不需要提供值，只是表示一个能作用于输入图片的窗口大小。</p><h1 id="3-3D-Conv"><a href="#3-3D-Conv" class="headerlink" title="3. 3D-Conv"></a>3. 3D-Conv</h1><p>3维的卷积，我个人的简单理解，就是在2维卷积的基础上加了一个深度的概念，如图。</p><p><img src="https://mic-jasontang.github.io/imgs/conv_3d.jpg" alt="figure1.6"></p><p>输入是一个32x32x3的矩阵，卷积核假定是5x5x3，可以看到一次的卷积操作的结果就是一个带有深度的单位矩阵（2维的一次卷积操作的结果是深度为1的单位矩阵）。这里的深度可以自己指定。</p><p>为了更好的理解3维的卷积，这里引用斯坦福写的一篇博客里面的动画。<a href="http://cs231n.github.io/convolutional-networks/" title="博客原地址" target="_blank" rel="noopener">http://cs231n.github.io/convolutional-networks/</a></p>&lt;iframe<br>    width=”100%”<br>    height=”100%”<br>    src=”<a href="http://cs231n.github.io/assets/conv-demo/index.html&quot;" target="_blank" rel="noopener">http://cs231n.github.io/assets/conv-demo/index.html&quot;</a><br>点击查看动画<a href="http://cs231n.github.io/assets/conv-demo/index.html" target="_blank" rel="noopener">http://cs231n.github.io/assets/conv-demo/index.html</a><br><br>    width=”750”<br>    height=”720”<br>    src=”<a href="https://cs231n.github.io/assets/conv-demo/index.html&quot;" target="_blank" rel="noopener">https://cs231n.github.io/assets/conv-demo/index.html&quot;</a><br>    frameborder=”0”<br>    allowfullscreen&gt;<br><h1 id="4-LeNet-5"><a href="#4-LeNet-5" class="headerlink" title="4. LeNet-5"></a>4. LeNet-5</h1><p>这里介绍下LeNet-5模型，为了理解前面讲述的各种模型</p><h1 id="Bibliography"><a href="#Bibliography" class="headerlink" title="Bibliography"></a>Bibliography</h1><p>这里介绍下LeNet-5模型，为了理解前面讲述的各种卷积和2种池化，下面具体介绍LeNet-5的每个层。</p><ul><li>C1:<ul><li>input: 32x32x1</li><li>conv: 5x5x1</li><li>padding: No Zero</li><li>strides: 1</li><li>output: 28x28x6</li><li>parmas: 5x5x1x6+6 = 156</li></ul></li></ul><blockquote><p>第一层，卷积层</p><p>这一层的输入就是原始的图像像素32<em>32</em>1。第一个卷积层过滤器尺寸为5<em>5，深度为6，不使用全0填充，步长为1。所以这一层的输出：28</em>28<em>6，卷积层共有5</em>5<em>1</em>6+6=156个参数。</p></blockquote><ul><li>S2:<ul><li>input: 28x28x6</li><li>pool: 2x2</li><li>padding: No Zero</li><li>strides: 2</li><li>output: 14x14x6</li></ul></li></ul><blockquote><p>第二层，池化层</p><p>这一层的输入为第一层的输出，是一个28<em>28</em>6的节点矩阵。本层采用的过滤器大小为2<em>2，长和宽的步长均为2，所以本层的输出矩阵大小为14</em>14*6。</p></blockquote><ul><li>C3:<ul><li>input: 14x14x6</li><li>conv: 5x5x16</li><li>padding: No Zero</li><li>strides: 1</li><li>output: 10x10x16</li><li>params: 5x5x6x16+16=2416</li></ul></li></ul><blockquote><p>第三层，卷积层</p><p>本层的输入矩阵大小为14<em>14</em>6，使用的过滤器大小为5<em>5，深度为16.本层不使用全0填充，步长为1。本层的输出矩阵大小为10</em>10<em>16。本层有5</em>5<em>6</em>16+16=2416个参数。</p></blockquote><ul><li>S4:<ul><li>input: 10x10x16</li><li>pool: 2x2</li><li>padding: No Zero</li><li>strides: 2</li><li>output: 5x5x16</li></ul></li></ul><blockquote><p>第四层，池化层</p><p>本层的输入矩阵大小10<em>10</em>16。本层采用的过滤器大小为2<em>2，长和宽的步长均为2，所以本层的输出矩阵大小为5</em>5*16。</p></blockquote><ul><li>C5:<ul><li>input: 5x5x16</li><li>conv: 5x5</li><li>padding: No Zero</li><li>strides: 1</li><li>output: 120</li><li>params: 5x5x16x120 + 120=48120</li></ul></li></ul><blockquote><p>第五层，全连接层(卷积层)</p><p>本层的输入矩阵大小为5<em>5</em>16，在LeNet-5论文中将这一层成为<strong>卷积层</strong>，但是因为过滤器的大小就是5<em>5，所以和全连接层没有区别。如果将5</em>5<em>16矩阵中的节点拉成一个向量，那么这一层和全连接层就一样了。本层的输出节点个数为120，总共有5</em>5<em>16</em>120+120=48120个参数。</p></blockquote><ul><li>F6:<ul><li>input: 120</li><li>output: 84</li><li>params: 120x84+84 = 10164</li></ul></li></ul><blockquote><p>第六层，全连接层</p><p>本层的输入节点个数为120个，输出节点个数为84个，总共参数为120*84+84=10164个。</p></blockquote><ul><li>Output:<ul><li>input: 84</li><li>output: 10</li><li>parmas: 84x10 + 10 = 850</li></ul></li></ul><blockquote><p>第七层，全连接层</p><p>本层的输入节点个数为84个，输出节点个数为10个，总共参数为84*10+10=850</p></blockquote><h1 id="Code"><a href="#Code" class="headerlink" title="Code"></a>Code</h1><ul><li>lenet_train.py</li></ul><p>训练代码</p><pre><code>#!/usr/bin/env python# -*- coding: utf-8 -*-# @Time    : 2018/2/21 16:08# @update  : 2018年4月19日21:38:34# @Author  : Jasontang# @Site    : # @File    : lenet_train.py# @ToDo    : 使用LeNet-5模型。定义了神经网络的训练过程import osimport tensorflow as tfimport numpy as npfrom tensorflow.examples.tutorials.mnist import input_dataimport neural_network_learning.cnn.lenet.mnist_inference as mnist_inference# 配置神经网络的参数BATCH_SIZE = 100# LEARNING_REATE_BASE = 0.8  # 0.8的学习率导致准确率不高。明显看出不收敛，准确率跟瞎猜差不多。LEARNING_REATE_BASE = 0.01  # 降低学习率LEARNING_RATE_DECAY = 0.99REGULARAZTION_RATE = 0.0001TRAING_STEPS = 30000MOVING_AVERAGE_DECAY = 0.99# 模型保存的路径和文件名MODEL_SAVE_PATH = &quot;./model/&quot;MODEL_NAME = &quot;model.ckpt&quot;def train(mnist):# 定义输入输出placeholderx = tf.placeholder(tf.float32,                   [BATCH_SIZE,                    mnist_inference.IMAGE_SIZE,                    mnist_inference.IMAGE_SIZE,                    mnist_inference.NUM_CHANNELS], name=&quot;input-x&quot;)y_ = tf.placeholder(tf.float32, [None, mnist_inference.OUTPUT_NODE], name=&quot;input-y&quot;)regularizer = tf.contrib.layers.l2_regularizer(REGULARAZTION_RATE)y = mnist_inference.inference(x, True, regularizer)global_step = tf.Variable(0, trainable=False)variable_averages = tf.train.ExponentialMovingAverage(MOVING_AVERAGE_DECAY, global_step)variables_average_op = variable_averages.apply(tf.trainable_variables())cross_entropy = tf.nn.sparse_softmax_cross_entropy_with_logits(labels=tf.argmax(y_, 1), logits=y)cross_entropy_mean = tf.reduce_mean(cross_entropy)# loss = tf.get_collection(&quot;losses&quot;) 返回一个列表# loss_add = tf.add_n(loss) 将列表元素进行相加loss = cross_entropy_mean + tf.add_n(tf.get_collection(&quot;losses&quot;))learing_rate = tf.train.exponential_decay(LEARNING_REATE_BASE,                                          global_step,                                          mnist.train.num_examples / BATCH_SIZE,                                          LEARNING_RATE_DECAY)train_step = tf.train.GradientDescentOptimizer(learing_rate).minimize(loss, global_step)with tf.control_dependencies([train_step, variables_average_op]):    train_op = tf.no_op(name=&quot;train&quot;)# 初始化持久化类saver = tf.train.Saver()with tf.device(&quot;/gpu:0&quot;):    session_conf = tf.ConfigProto(allow_soft_placement=True)    with tf.Session(config=session_conf) as sess:        tf.global_variables_initializer().run()        for i in range(TRAING_STEPS):            xs, ys = mnist.train.next_batch(BATCH_SIZE)            reshaped_xs = np.reshape(xs, [BATCH_SIZE,                                          mnist_inference.IMAGE_SIZE,                                          mnist_inference.IMAGE_SIZE,                                          mnist_inference.NUM_CHANNELS])            # print(type(xs))            # print(type(reshaped_xs))            _, loss_value, step = sess.run([train_op, loss, global_step], feed_dict={x: reshaped_xs, y_: ys})            if i % 1000 == 0:                print(&quot;After %d training step(s), loss on training batch is %g.&quot; % (step, loss_value))                saver.save(sess, os.path.join(MODEL_SAVE_PATH, MODEL_NAME), global_step=global_step)def main(argv=None):    # 存放目录为当前工程目录下的MNIST_data目录    mnist = input_data.read_data_sets(&quot;./MNIST_data&quot;, one_hot=True)    train(mnist)if __name__ == &apos;__main__&apos;:    tf.app.run()</code></pre><ul><li>lenet_inference</li></ul><p>计算代码</p><pre><code>#!/usr/bin/env python# -*- coding: utf-8 -*-# @Time    : 2018/2/20 19:43# @update  : 2018年4月19日21:38:34# @Author  : Jasontang# @Site    : # @File    : lent_inference.py# @ToDo    : 使用LeNet-5模型。定义了前向传播的过程及神经网络的参数import tensorflow as tf# 定义神经网络结构相关的参数INPUT_NODE = 784OUTPUT_NODE = 10IMAGE_SIZE = 28NUM_CHANNELS = 1NUM_LABELS = 10# 第一层卷积层的尺寸和深度CONV1_DEEP = 32CONV1_SIZE = 5# 第二层卷积层的尺寸和深度CONV2_DEEP = 64CONV2_SIZE = 5# 全连接层的结点个数FC_SIZE = 512# 卷积神经网络的前向传播过程# 添加一个新的参数train，用于区分训练过程和测试过程。# 在这个程序中将用到dropout方法，dropout可以进一步提升模型可靠性并防止# 过拟合。dropout过程只在训练时使用。def inference(input_tensor, train, regularizer, dropout=0.5):    # 声明第一层神经网络的变量并完成前向传播过程    # 和标准的LeNet-5模型不大一样，这里定义的卷积层输入为28*28*1的原始MNIST图片像素。    # 因为卷积层使用了全0填充，所以输出为28*28*32的矩阵。    with tf.variable_scope(&quot;layer1-conv1&quot;):        conv1_weights = tf.get_variable(&quot;weights&quot;, [CONV1_SIZE, CONV1_SIZE, NUM_CHANNELS, CONV1_DEEP],                                        initializer=tf.truncated_normal_initializer(stddev=0.1))        conv1_biases = tf.get_variable(&quot;biases&quot;, [CONV1_DEEP], initializer=tf.constant_initializer(0.1))        # 使用变长为5，深度为32的过滤器，过滤器移动的步长为1，且使用全0填充。        conv1 = tf.nn.conv2d(input_tensor, conv1_weights, strides=[1, 1, 1, 1], padding=&quot;SAME&quot;)        relu1 = tf.nn.relu(tf.nn.bias_add(conv1, conv1_biases))    # 实现第二层池化层的前向传播过程，这里选择最大池化层，池化层过滤器的变长为2    # 使用全0填充且移动的步长为2，这一层的输入是上一层的输出，也就是28*28*32的矩阵。    # 输出为14*14*32的矩阵    with tf.variable_scope(&quot;layer2-pool1&quot;):        pool1 = tf.nn.max_pool(relu1,                               ksize=[1, 2, 2, 1],                               strides=[1, 2, 2, 1],                               padding=&quot;SAME&quot;)    # 声明第三层卷积层的变量并实现前向传播过程，这一层的输入为14*14*32的矩阵。    # 输出为14*14*64的矩阵。    with tf.variable_scope(&quot;layer3-conv2&quot;):        conv2_weights = tf.get_variable(&quot;weight&quot;,                                        [CONV2_SIZE, CONV2_SIZE, CONV1_DEEP, CONV2_DEEP],                                        initializer=tf.truncated_normal_initializer(stddev=0.1))        conv2_biases = tf.get_variable(&quot;bias&quot;, [CONV2_DEEP], initializer=tf.constant_initializer(0.1))        # 使用边长为5，深度为64的过滤器，过滤器移动的步长为1，且使用全0填充。        conv2 = tf.nn.conv2d(pool1, conv2_weights, strides=[1, 1, 1, 1], padding=&quot;SAME&quot;)        relu2 = tf.nn.relu(tf.nn.bias_add(conv2, conv2_biases))    # 实现第四层池化层的前向传播过程。这一层和第二层的记过是一样的，这一层的输入为14*14*64的矩阵，    # 输出位7*7*64的矩阵。    with tf.name_scope(&quot;layer4-pool2&quot;):        pool2 = tf.nn.max_pool(relu2,                               ksize=[1, 2, 2, 1],                               strides=[1, 2, 2, 1],                               padding=&quot;SAME&quot;)    # 将第四层池化层的输出转化为第五层全连接层的输入格式。    # 第四层的输出为7*7*64的矩阵，然后第五层全连接层需要的输入格式为向量    # 所以在这里需要将这个7*7*64的矩阵拉直成一个向量。pool2.get_shape函数可以得到    # 第四层输出矩阵的维度而不需要手工计算。注意因为每一层神经网络的输入输出都为一个batch的矩阵，    # 所以这里得到的维度也包含了一个batch的数据的个数。    pool_shape = pool2.get_shape().as_list()    # 计算将矩阵拉直成向量之后的长度，这个长度就是矩阵长宽及深度的乘积。    # 这里pool_shape[0]为一个batch中数据的个数    nodes = pool_shape[1] * pool_shape[2] * pool_shape[3]    # 通过tf.reshape函数将第四层的输出变成一个batch的向量    reshaped = tf.reshape(pool2, [pool_shape[0], nodes])    # 声明第五层全连接层的变量并实现前向传播过程，这一层的输入是拉直之后的一组向量，    # 向量长度为3136，输出是一组长度为512的向量。这一层和之前在重构MNIST数据集的代码基本一致，    # 唯一的区别就是引入了dropout的概念。dropout在训练时会随机将部分结点的输出改为0。    # dropout可以避免过拟合问题，从而使得模型在测试数据上的效果更好。    # dropout一般只在全连接层而不是卷积层或者池化层使用。    with tf.variable_scope(&quot;layer5-fc1&quot;):        fc1_weights = tf.get_variable(&quot;weight&quot;,                                      [nodes, FC_SIZE],                                      initializer=tf.truncated_normal_initializer(stddev=0.1))        # 只要全连接层的权重需要加入正则化        if regularizer is not None:            # 当使用正则化生成函数时,当前变量的正则化损失加入名字为losses的集合.            tf.add_to_collection(&quot;losses&quot;, regularizer(fc1_weights))        fc1_biases = tf.get_variable(&quot;bias&quot;,                                     [FC_SIZE],                                     initializer=tf.constant_initializer(0.1))        fc1 = tf.nn.relu(tf.matmul(reshaped, fc1_weights) + fc1_biases)        if train:            fc1 = tf.nn.dropout(fc1, dropout)    # 声明第六层全连接层的变量并实现前向传播过程。    # 这一层的输入为一组长度为512的向量，输出为一组长度为10的向量。    # 这一层的输出通过Softmax之后就得到了最后的分类结果。    with tf.variable_scope(&quot;layer6-fc2&quot;):        fc2_weights = tf.get_variable(&quot;weight&quot;,                                      [FC_SIZE, NUM_LABELS],                                      initializer=tf.truncated_normal_initializer(stddev=0.1))        if regularizer is not None:            # 当使用正则化生成函数时,当前变量的正则化损失加入名字为losses的集合.            tf.add_to_collection(&quot;losses&quot;, regularizer(fc2_weights))        fc2_biases = tf.get_variable(&quot;bias&quot;,                                     [NUM_LABELS],                                     initializer=tf.constant_initializer(0.1))        logit = tf.matmul(fc1, fc2_weights) + fc2_biases    # 返回第六层的输出    return logit</code></pre><ul><li>lenet_eval.py</li></ul><p>测试代码</p><pre><code>#!/usr/bin/env python# -*- coding: utf-8 -*-# @Time    : 2018年4月19日21:38:34# @Author  : Jasontang# @Site    : # @File    : mnist_eval.py# @ToDo    : 测试过程import timeimport tensorflow as tfimport numpy as npfrom tensorflow.examples.tutorials.mnist import input_dataimport neural_network_learning.cnn.lenet.mnist_inference as mnist_inferenceimport neural_network_learning.cnn.lenet.mnist_train as mnist_train# 每10s加载一次最新模型，并在测试数据上测试最新模型的正确率EVAL_INTERVAL_SECS = 10def evaluate(mnist):    x = tf.placeholder(tf.float32,                       [mnist.validation.images.shape[0],                        mnist_inference.IMAGE_SIZE,                        mnist_inference.IMAGE_SIZE,                        mnist_inference.NUM_CHANNELS], name=&quot;input-x&quot;)    y_ = tf.placeholder(tf.float32, [None, mnist_inference.OUTPUT_NODE], name=&quot;input-y&quot;)    y = mnist_inference.inference(x, False, None)    correct_prediction = tf.equal(tf.argmax(y, 1), tf.argmax(y_, 1))    accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))    variable_averages = tf.train.ExponentialMovingAverage(mnist_train.MOVING_AVERAGE_DECAY)    variables_to_restore = variable_averages.variables_to_restore()    saver = tf.train.Saver(variables_to_restore)    # 每隔EVAL_INTERVAL_SECS秒调用一次计算正确率的过程以检测训练过程中正确率的变化    stop_count = 0    while True:        with tf.Session() as sess:            # tf.train.get_checkpoint_state函数会通过checkpoint文件自动找刀目录中最新模型的文件名            ckpt = tf.train.get_checkpoint_state(mnist_train.MODEL_SAVE_PATH)            # 停止条件 #            stop_count += 1            if stop_count &gt; 5:                return            # 停止条件 #            if ckpt and ckpt.model_checkpoint_path:                # 加载模型                saver.restore(sess, ckpt.model_checkpoint_path)                # 通过文件名得到模型保存时迭代的轮数                # 输出./model/model.ckpt-29001                print(ckpt.model_checkpoint_path)                global_step = ckpt.model_checkpoint_path.split(&quot;/&quot;)[-1].split(&quot;-&quot;)[-1]                validate_feed = {x: mnist.validation.images,                                 y_: mnist.validation.labels}                # print(validate_feed[x])                reshaped_x = np.reshape(validate_feed[x],                                        [validate_feed[x].shape[0],                                         mnist_inference.IMAGE_SIZE,                                         mnist_inference.IMAGE_SIZE,                                         mnist_inference.NUM_CHANNELS])                validate_feed[x] = reshaped_x                accuracy_score = sess.run(accuracy, feed_dict=validate_feed)                print(&quot;After %s training step(s), validation accuracy is %g&quot; % (global_step, accuracy_score))            else:                print(&quot;No checkpoint file found&quot;)                return        time.sleep(EVAL_INTERVAL_SECS)def main(argv=None):    # 存放目录为当前工程目录下的MNIST_data目录    mnist = input_data.read_data_sets(&quot;./MNIST_data&quot;, one_hot=True)    evaluate(mnist)if __name__ == &apos;__main__&apos;:    tf.app.run()</code></pre><p>MNIST数据集</p><p><img src="https://mic-jasontang.github.io/imgs/mnist_data.png" alt="AI Live"></p><p>测试结果</p><p><img src="https://mic-jasontang.github.io/imgs/mnist_result.png" alt="AI Live"></p><p>最终正确率可以达到99%</p><h1 id="Bibliography-1"><a href="#Bibliography-1" class="headerlink" title="Bibliography"></a>Bibliography</h1><ol><li>A guide to convolution arithmetic for deep learning<a href="https://arxiv.org/pdf/1603.07285.pdf" title="A guide to convolution arithmetic for deep learning" target="_blank" rel="noopener">https://arxiv.org/pdf/1603.07285.pdf</a></li><li>TensforFlow 实战Google深度学习框架</li></ol><p>我参与举办了一个小团体，主要是技术分享，这篇是第三期的分享内容。下面是我们的公众号:</p><p><img src="https://mic-jasontang.github.io/imgs/AI_Live.jpg" alt="AI Live"></p><p><img src="https://mic-jasontang.github.io/imgs/join_us.jpg" alt="Join Us"></p>]]></content>
+      
+      <categories>
+          
+          <category> 深度学习 </category>
+          
+          <category> 深度学习基础 </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> tensorflow </tag>
+            
+            <tag> 卷积 </tag>
+            
+            <tag> 池化 </tag>
+            
+            <tag> LeNet-5 </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    <entry>
+      <title>字符串-旋转词</title>
+      <link href="/2018/03/25/%E5%AD%97%E7%AC%A6%E4%B8%B2-%E6%97%8B%E8%BD%AC%E8%AF%8D/"/>
+      <content type="html"><![CDATA[<h1 id="题目"><a href="#题目" class="headerlink" title="题目"></a>题目</h1><p>如果对于一个字符串A，将A的前面任意一部分挪到后边去形成的字符串称为A的旋转词。比如A=”12345”,A的旋转词有”12345”,”23451”,”34512”,”45123”和”51234”。对于两个字符串A和B，请判断A和B是否互为旋转词。</p><p>给定两个字符串A和B及他们的长度lena，lenb，请返回一个bool值，代表他们是否互为旋转词。</p><p>测试样例：</p><blockquote><p>“cdab”,4,”abcd”,4</p></blockquote><blockquote><p>返回：true</p></blockquote><a id="more"></a><h1 id="思路"><a href="#思路" class="headerlink" title="思路"></a>思路</h1><ol><li>首先判断lena和lenb是否相同</li><li>如果长度相同，则生成A + A的新字符串newA</li><li>使用kmp算法或者别的查找子串的方法看newA中是否包含B</li></ol><p>下面举例说明，这样做为什么是对的。</p><p><img src="https://mic-jasontang.github.io/imgs/algorithm/string/rota_str2.png" alt></p><p><img src="https://mic-jasontang.github.io/imgs/algorithm/string/rota_str3.png" alt></p><h1 id="Java代码"><a href="#Java代码" class="headerlink" title="Java代码"></a>Java代码</h1><pre><code>import java.util.*;public class Rotation {    public boolean chkRotation(String A, int lena, String B, int lenb) {        if (lena != lenb){            return false;        }        String str = A + A;        // 这里我偷懒了，直接使用indexOf()函数来寻找子串，此函数找不到时会返回-1，找到时返回第一个字符出现的下标        if (str.indexOf(B) != -1) {            return true;        }        return false;    }}</code></pre><h1 id="Python代码"><a href="#Python代码" class="headerlink" title="Python代码"></a>Python代码</h1><pre><code># -*- coding:utf-8 -*-class Rotation:    def chkRotation(self, A, lena, B, lenb):        if lena != lenb:            return False        str = A + A        if str.find(B) != -1:            return True        else:            return False</code></pre><p>或者可以写成这样</p><pre><code># -*- coding:utf-8 -*-class Rotation:    def chkRotation(self, A, lena, B, lenb):        return lena == lenb and B in A + A</code></pre><p>还有一些类似的题目。</p><p>题目2</p><p><img src="https://mic-jasontang.github.io/imgs/algorithm/string/rota_str4.png" alt></p><p><img src="https://mic-jasontang.github.io/imgs/algorithm/string/rota_str5.png" alt></p><p>题目3</p><p><img src="https://mic-jasontang.github.io/imgs/algorithm/string/rota_str6.png" alt></p><p><img src="https://mic-jasontang.github.io/imgs/algorithm/string/rota_str7.png" alt></p><p>题目4</p><p><img src="https://mic-jasontang.github.io/imgs/algorithm/string/rota_str8.png" alt></p><p><img src="https://mic-jasontang.github.io/imgs/algorithm/string/rota_str9.png" alt></p><p><img src="https://mic-jasontang.github.io/imgs/algorithm/string/rota_str10.png" alt></p>]]></content>
+      
+      <categories>
+          
+          <category> 基础算法 </category>
+          
+          <category> 字符串 </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> java实现 </tag>
+            
+            <tag> Python实现 </tag>
+            
+            <tag> 字符串 </tag>
+            
+            <tag> 旋转词 </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    <entry>
+      <title>二叉树按层打印</title>
+      <link href="/2018/03/25/%E4%BA%8C%E5%8F%89%E6%A0%91%E6%8C%89%E5%B1%82%E6%89%93%E5%8D%B0/"/>
+      <content type="html"><![CDATA[<h1 id="题目"><a href="#题目" class="headerlink" title="题目"></a>题目</h1><p>有一棵二叉树，请设计一个算法，按照层次打印这棵二叉树。</p><p>给定二叉树的根结点root，请返回打印结果，结果按照每一层一个数组进行储存，所有数组的顺序按照层数从上往下，且每一层的数组内元素按照从左往右排列。保证结点数小于等于500。</p><a id="more"></a><h1 id="思路"><a href="#思路" class="headerlink" title="思路"></a>思路</h1><p>使用队列和两个变量，如图（其实需要一个变量来指向当前打印的元素）。</p><p><img src="https://mic-jasontang.github.io/imgs/algorithm/tree/level_tree.png" alt></p><p>首先last=root（1），将root（1）入队，然后出队并打印，再用一个变量（temp）记录打印的元素。然后将root（1）的两个孩子（2和3）结点分别入队，入队的同时，让nlast指向两个孩子结点，即入队就更新nlast。</p><p><img src="https://mic-jasontang.github.io/imgs/algorithm/tree/level_tree.png" alt></p><p>然后此时比较打印的元素（1）是否和last指向的元素（1）相同，若相同表示要换行了（因为last始终指向正在打印的当前行最右的元素），则更新last=nlast（last指向结点3），然后将结点2出队并打印，让temp更新并记录结点2，并将结点2的孩子结点（4）入队，并将nlast指向结点2的孩子结点（4），然后将结点（3）出队并打印，让temp更新并记录结点3，让结点（3）的孩子结点（5和6）入队，此时比较temp结点和last指向的结点（3）是否相同，相同则更新last=nlast，依次下去，即可完成打印。</p><p><img src="https://mic-jasontang.github.io/imgs/algorithm/tree/level_tree3.png" alt></p><h1 id="Java代码"><a href="#Java代码" class="headerlink" title="Java代码"></a>Java代码</h1><pre><code>import java.util.*;public class TreePrinter {    // 结点定义    class TreeNode {        int val = 0;        TreeNode left = null;        TreeNode right = null;        public TreeNode(int val) {            this.val = val;        }    }        public int[][] printTree(TreeNode root) {        // 在Java中LinkedList实现了Queue接口。        Queue&lt;TreeNode&gt; queue = new LinkedList&lt;&gt;();        TreeNode last, nlast = null;        last = root; // 初始化last结点        queue.add(last);  // 根节点入队        // 结果要返回int[][],但不清楚需要几行几列，所以需要用到集合，这里相当于定义了一个二维数组        // &lt;&gt;表示泛型，表示这个集合只能装Integer类型，可以忽略，因为编译之后泛型就没了        List&lt;List&lt;Integer&gt;&gt; res = new ArrayList&lt;&gt;();        // 定义每一行,即row作为res的元素        List&lt;Integer&gt; row = new ArrayList&lt;&gt;();        // 通过上面分析可以看到循环的条件是队列不为空，因为初始已经将根节点入队了        while (!queue.isEmpty()) {            // 结点首先出队，并用temp变量记录。            TreeNode temp = queue.poll();            // 这个可以使用不换行的打印，为了满足题目的返回条件，这里将它加入到行集合中            row.add(temp.val);            // 出队元素的左孩子不为空，入队并跟新nlast            if (temp.left != null) {                nlast = temp.left;                queue.add(nlast);            }            // 出队元素的右孩子不为空，入队并跟新nlast            if (temp.right != null) {                nlast = temp.right;                queue.add(nlast);            }            // 如果已经出队并被打印的元素和last指向的元素相同            // 则需要换行了，并更新last=nlast            if (temp.val == last.val) {                last = nlast;                // 将这一行加入到结果集合中                res.add(row);                // 清空这一行,这里不能用row.clear()，需要重新new一个对象出来。                row = new ArrayList&lt;&gt;();            }        }        // 到此结果就被遍历出来了，下面构造符合题目返回结果的元素。        // 首先开辟多上行的元素，列是空的        int [][] ans = new int[res.size()][];        for (int i = 0; i &lt; res.size(); i ++){            // 元素对每一行开辟多少列            ans[i] = new int[res.get(i).size()];            for (int j = 0; j &lt; res.get(i).size(); j++) {                // 完成赋值                ans[i][j] = res.get(i).get(j);                // 测试使用                //System.out.print(ans[i][j]);            }            // 测试使用            //System.out.println();        }        //返回结果        return ans;    }}</code></pre><h1 id="测试程序"><a href="#测试程序" class="headerlink" title="测试程序"></a>测试程序</h1><pre><code>public static void main(String[] args) {    TreeNode root = new TreeNode(1);    root.left = new TreeNode(2);    root.right = new TreeNode(3);    root.left.left = new TreeNode(4);    root.right.left = new TreeNode(5);    root.right.right = new TreeNode(6);    root.right.left.left = new TreeNode(7);    root.right.left.right = new TreeNode(8);    printTree(root);}</code></pre><h1 id="Python代码"><a href="#Python代码" class="headerlink" title="Python代码"></a>Python代码</h1><pre><code># -*- coding:utf-8 -*-# 结点定义 class TreeNode:     def __init__(self, x):         self.val = x         self.left = None         self.right = Noneclass TreePrinter:    def printTree(self, root):        # 结果定义        res=[]           # 队列（使用列表可以模拟队列）        queue=[]         # 判空        if root==None:            return res        # 初始化结点        last=nlast=root        # 入队使用append()函数        queue.append(root)        # 一行，相当于Java代码中的row数组        row=[]        # 队列不为空用循环        while len(queue):            # 出队，并用temp结点来记录，使用pop(0)函数，即弹出列表的第一个元素（队首元素）            temp=queue.pop(0)            # 入队            row.append(temp.val)            # 如果出队元素的左右孩子不为空，则入队并更新nlast            if temp.left!=None:                queue.append(temp.left)                nlast=temp.left            if temp.right!=None:                queue.append(temp.right)                nlast=temp.right            # 如果出队元素和last指向的元素相同，则完成一行的打印            if temp==last:                # 加入到结果中row[:]表示将row中所有元素放入到res中,是一个列表                res.append(row[:])                # 清空这一行                row=[]                # 更新last指向nlast                last=nlast         return res</code></pre>]]></content>
+      
+      <categories>
+          
+          <category> 基础算法 </category>
+          
+          <category> 树 </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> 二叉树 </tag>
+            
+            <tag> 层次遍历 </tag>
+            
+            <tag> java实现 </tag>
+            
+            <tag> Python实现 </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    <entry>
+      <title>粗糙表面计算机模拟(matlab+3dsMax仿真)</title>
+      <link href="/2018/03/23/%E7%B2%97%E7%B3%99%E8%A1%A8%E9%9D%A2%E8%AE%A1%E7%AE%97%E6%9C%BA%E6%A8%A1%E6%8B%9F/"/>
+      <content type="html"><![CDATA[<p>本文主要使用matlab对零件表面的粗糙度进行模拟[1]，然后生成模型，导入到3dsMax中进行仿真.<br>采用matlab实现具有高斯分布粗糙表面的模拟，参考胡元中的论文。<br><a id="more"></a></p><h1 id="代码"><a href="#代码" class="headerlink" title="代码"></a>代码</h1><pre><code>clearclcN=128;%生成大小delta=0.05;%表面均方根粗糙度betax=30;%x方向的相关长度betay=30;%y方向的相关长度C=1;%功率谱密度L=0.05;dx=L/N;dy=dx;NN=-N/2:N/2-1;[Nx,Ny]=meshgrid(NN,NN);taux=dx.*Nx;tauy=dy.*Ny;%%生成具有指定自相关函数的粗糙表面eta=randn(N,N);%高斯分布白噪声A=fft2(eta);%傅里叶变换R=zeros(N,N);R=delta^2*exp(-2.3*((taux/betax).^2+(tauy/betay).^2).^0.5);%自相关函数Gz=1/(2*pi^2).*fft2(R);%功率谱密度函数H=(Gz/C).^0.5;%传递函数Z=H.*A;%表面高度的傅里叶变换z=ifft2(Z);%表面高度分布z = abs(z) * 1800;figure(1);mesh(z);% surf2stl(&apos;surf_roughness.stl&apos;,1,1,z) % 生成模型title(&apos;rough surface&apos;);axis square</code></pre><h1 id="实验结果"><a href="#实验结果" class="headerlink" title="实验结果"></a>实验结果</h1><p>matlab仿真结果128*128</p><p><img src="https://mic-jasontang.github.io/imgs/surf_roughness_128.png" alt="matlab仿真结果128*128"></p><p>matlab仿真结果256*256</p><p><img src="https://mic-jasontang.github.io/imgs/surf_roughness_256.png" alt="matlab仿真结果256*256"></p><h1 id="仿真结果"><a href="#仿真结果" class="headerlink" title="仿真结果"></a>仿真结果</h1><p>采用目标聚光灯和目标相机，相机采用50mm焦距拍摄，金属材质，高光级别106，光泽度68，模拟效果还算理想。</p><p>3dMax仿真结果</p><p><img src="https://mic-jasontang.github.io/imgs/50mm-106-68.png" alt="3dMax仿真结果"></p><p>3dMax仿真之后进行试验的结果</p><p><img src="https://mic-jasontang.github.io/imgs/50mm-106-68-ans.png" alt="3dMax仿真之后进行试验的结果"></p><h1 id="参考文献"><a href="#参考文献" class="headerlink" title="参考文献"></a>参考文献</h1><p>[1]陈辉,胡元中,王慧,王文中.粗糙表面计算机模拟[J].润滑与密封,2006(10):52-55+59.</p>]]></content>
+      
+      <categories>
+          
+          <category> 研磨&amp;粗糙度 </category>
+          
+          <category> 研磨表面仿真 </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> 表面粗糙度 </tag>
+            
+            <tag> matlab模拟粗糙度 </tag>
+            
+            <tag> 3dsMax仿真 </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    <entry>
+      <title>关于k阶矩的理解</title>
+      <link href="/2018/03/22/%E5%85%B3%E4%BA%8Ek%E9%98%B6%E7%9F%A9%E7%9A%84%E7%90%86%E8%A7%A3/"/>
+      <content type="html"><![CDATA[<h1 id="k阶原点矩、2阶矩、3阶矩该怎么理解？"><a href="#k阶原点矩、2阶矩、3阶矩该怎么理解？" class="headerlink" title="k阶原点矩、2阶矩、3阶矩该怎么理解？"></a>k阶原点矩、2阶矩、3阶矩该怎么理解？</h1><p>下面使用语言描述和代码来讲解。<br><a id="more"></a></p><blockquote><p>阶矩是用来描述随机变量的概率分布的特性.</p></blockquote><blockquote><p>一阶矩指的是随机变量的平均值,即期望值</p><p>二阶矩指的是随机变量的方差</p><p>三阶矩指的是随机变量的偏度</p><p>四阶矩指的是随机变量的峰度</p></blockquote><blockquote><p>因此通过计算矩,则可以得出随机变量的分布形状</p></blockquote><h1 id="代码实现"><a href="#代码实现" class="headerlink" title="代码实现"></a>代码实现</h1><p>使用Python2.0实现</p><pre><code>import numpy as npfrom scipy import statsdef calc_statistics(x):n = x.shape[0]   #样本个数# 手动计算m = 0m2 = 0m3 = 0m4 = 0for t in x:    m += t    m2 += t*t    m3 += t**3    m4 += t**4m /= nm2 /= nm3 /= nm4 /= nmu = m    # 一阶矩sigma = np.sqrt(m2 - mu*mu)   # 二阶矩skew = (m3 - 3*mu*m2 + 2*mu**3) / sigma**3    # 三阶矩（偏度）kurtosis = (m4 - 4*mu*m3 + 6*mu*mu*m2 - 4*mu**3*mu + mu**4) / sigma**4 - 3    # 四阶矩（峰度）print &quot;手动计算均值、标准差、偏度、峰度：&quot;, mu, sigma, skew, kurtosis# 使用系统函数验证mu = np.mean(x, axis=0)sigma = np.std(x, axis=0)skew = stats.skew(x)kurtosis = stats.kurtosis(x)return mu, sigma, skew, kurtosisif __name__ == &apos;__main__&apos;:d = np.random.randn(10000)print dprint d.shapemu, sigma, skew, kurtosis = calc_statistics(d)print &quot;函数库计算均值、标准差、偏度、峰度：&quot;, mu, sigma, skew, kurtosis</code></pre><p>执行结果:</p><blockquote><p>[-0.42751577  0.36230961  0.37899409 …,  0.09176115 -1.38955563<br> -0.57570736]</p></blockquote><blockquote><p>(10000L,)</p></blockquote><blockquote><p>手动计算均值、标准差、偏度、峰度： -0.00189350820374 0.995018151945 -0.00589521484127 -0.0590604043446</p></blockquote><blockquote><p>函数库计算均值、标准差、偏度、峰度： -0.00189350820374 0.995018151945 -0.00589521484127 -0.0590604043446</p></blockquote>]]></content>
+      
+      <categories>
+          
+          <category> 数学基础 </category>
+          
+          <category> 随机过程 </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> k阶矩 </tag>
+            
+            <tag> 随机过程 </tag>
+            
+            <tag> 偏度 </tag>
+            
+            <tag> 峰度 </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    <entry>
+      <title>Hexo多电脑同步写作</title>
+      <link href="/2018/03/22/Hexo%E5%A4%9A%E7%94%B5%E8%84%91%E5%90%8C%E6%AD%A5%E5%86%99%E4%BD%9C/"/>
+      <content type="html"><![CDATA[<p>利用Hexo安装完博客之后，如何实现多电脑写作捏？下面分几步来说明</p><h1 id="1-上传文件到仓库"><a href="#1-上传文件到仓库" class="headerlink" title="1.上传文件到仓库"></a>1.上传文件到仓库</h1><p>前提是已经安装好Git客户端。这个应该在你安装博客的时候就已经安装好了吧。不会的话，百度下下载链接安装就好。<br>首先你要明白，你创建的博客通过<code>hexo d</code>命令部署到github之后,和你的本地博客根目录下的<code>.deploy_git</code>文件夹中的目录结构是一样的，所以，这只能算是个web工程，若要想实现多客户端写作的话，需要通过下面的步骤。</p><a id="more"></a><ol><li>首先在你Github账户上新建一个仓库，例如名为<code>hexo-blog</code></li><li>将本地博客根目录下的5个文件分别copy到一个新文件夹(例：hexo-blog)里面。<ol><li>scaffolds</li><li>source</li><li>themes（记得删除你下载主题的.git目录，它通常是隐藏的，需要取消隐藏之后删除，或者使用Git客户端来删除，<code>ls -a &amp;&amp; rm .git</code>）</li><li>_config.yml</li><li>package.json</li></ol></li><li>在hexo-blog目录中执行<ol><li><code>git init</code></li><li><code>git add .</code></li><li><code>git remote add origin git@github@你github用户名/hexo-blog(换成你仓库名).github.io.git</code>（使用你新建的仓库的SSH地址）</li><li><code>git commit -m &#39;blog source bakcup&#39;</code>(commit之后才能创建分支)</li><li><code>git branch hexo</code>创建一个hexo分支</li><li><code>git checkout hexo</code>切换到hexo分支</li><li><code>git push origin hexo</code></li></ol></li><li>在第2步中，起始可以直接执行第3步的命令，也即可以不用复制那5个文件到新的目录中，只是因为那5个目录是必须的，其他的都是次要的。</li></ol><h1 id="2-下载文件"><a href="#2-下载文件" class="headerlink" title="2. 下载文件"></a>2. 下载文件</h1><p>上一步已经将你本地的博客托管到了github仓库中，接下来需要在你另一台需要写博客的电脑中，安装Node.js（这个自行百度吧，直接next安装即可）然后执行clone命令即可。</p><ol><li>进入到你放置博客的目录中，然后执行<code>git clone -b hexo git@github@你github用户名/hexo-blog(换成你仓库名).github.io.git</code></li><li><code>cd hexo-blog</code>进入此仓库目录中</li><li>执行<code>npm install</code>安装所需组件</li><li>使用<code>hexo g &amp;&amp; hexo s -p 8080</code> 在本地打开浏览器输入<code>localhost:8080</code> 查看与在线的博客是否一致。</li><li>使用<code>hexo new &quot;page name&quot;</code>新建一片博客，写完一篇博客，然后部署<code>hexo clean &amp;&amp; hexo g &amp;&amp; hexo d</code>,再执行以下命令来完成同步<ol><li><code>git add .</code></li><li><code>git commit -m &#39;add a new page&#39;</code></li><li><code>git push origin hexo</code></li></ol></li><li>此时就可以在你原先电脑上执行<code>git pull origin hexo</code>来完成同步了。 </li></ol><h1 id="留言"><a href="#留言" class="headerlink" title="留言"></a>留言</h1><p>如果还有不懂请在下面留言，我会及时回复。</p>]]></content>
+      
+      <categories>
+          
+          <category> 技术文章 </category>
+          
+          <category> 博客搭建 </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> hexo </tag>
+            
+            <tag> 多电脑同步 </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    <entry>
+      <title>Mnist手写数字体识别(tensorflow)</title>
+      <link href="/2018/03/20/Mnist%E6%89%8B%E5%86%99%E6%95%B0%E5%AD%97%E8%AF%86%E5%88%AB-tensorflow/"/>
+      <content type="html"><![CDATA[<h1 id="Tensorflow"><a href="#Tensorflow" class="headerlink" title="Tensorflow"></a>Tensorflow</h1><blockquote><p>首先，简单的说下，tensorflow的基本架构。<br>使用 TensorFlow, 你必须明白 TensorFlow:</p></blockquote><ul><li>使用图 (graph) 来表示计算任务.</li><li>在被称之为 会话 (Session) 的上下文 (context) 中执行图.</li><li>使用 tensor 表示数据.</li><li>通过 变量 (Variable) 维护状态.</li><li>使用 feed 和 fetch 可以为任意的操作(arbitrary operation) 赋值或者从其中获取数据.</li></ul><a id="more"></a><h1 id="Tensor"><a href="#Tensor" class="headerlink" title="Tensor"></a>Tensor</h1><blockquote><p>TensorFlow 是一个编程系统, 使用图来表示计算任务. 图中的节点被称之为 op (operation 的缩写). 一个 op 获得 0 个或多个 Tensor, 执行计算, 产生 0 个或多个 Tensor. 每个 Tensor 是一个类型化的多维数组. 例如, 你可以将一小组图像集表示为一个四维浮点数数组, 这四个维度分别是 [batch, height, width, channels].</p></blockquote><blockquote><p>一个 TensorFlow 图描述了计算的过程. 为了进行计算, 图必须在 会话 里被启动. 会话 将图的 op 分发到诸如 CPU 或 GPU 之类的 设备 上, 同时提供执行 op 的方法. 这些方法执行后, 将产生的 tensor 返回. 在 Python 语言中, 返回的 tensor 是 numpy ndarray 对象; 在 C 和 C++ 语言中, 返回的 tensor 是tensorflow::Tensor 实例.</p></blockquote><blockquote><p>Tensor是tensorflow中非常重要且非常基础的概念，可以说数据的呈现形式都是用tensor表示的。输入输出都是tensor，tensor的中文含义，就是张量，可以简单的理解为线性代数里面的向量或者矩阵。</p></blockquote><h1 id="Graph"><a href="#Graph" class="headerlink" title="Graph"></a>Graph</h1><blockquote><p>TensorFlow 程序通常被组织成一个构建阶段和一个执行阶段. 在构建阶段, op 的执行步骤 被描述成一个图. 在执行阶段, 使用会话执行执行图中的 op.</p></blockquote><blockquote><p>例如, 通常在构建阶段创建一个图来表示和训练神经网络, 然后在执行阶段反复执行图中的训练 op. 下面这个图，就是一个比较形象的说明，图中的每一个节点，就是一个op，各个op透过tensor数据流向形成边的连接，构成了一个图。</p></blockquote><p><img src="https://images2015.cnblogs.com/blog/844237/201703/844237-20170330093311608-2056024255.gif" alt></p><blockquote><p>构建图的第一步, 是创建源 op (source op). 源 op 不需要任何输入, 例如 常量 (Constant). 源 op 的输出被传递给其它 op 做运算. Python 库中, op 构造器的返回值代表被构造出的 op 的输出, 这些返回值可以传递给其它 op 构造器作为输入.</p></blockquote><blockquote><p>TensorFlow Python 库有一个默认图 (default graph), op 构造器可以为其增加节点. 这个默认图对 许多程序来说已经足够用了.</p></blockquote><h1 id="Session"><a href="#Session" class="headerlink" title="Session"></a>Session</h1><blockquote><p>当图构建好后，需要创建一个Session来运行构建好的图，来实现逻辑，创建session的时候，若无任何参数，tensorflow将启用默认的session。session.run(xxx)是比较典型的使用方案, session运行结束后，返回值是一个tensor。</p></blockquote><blockquote><p>tensorflow中的session，有两大类，一种就是普通的session，即tensorflow.Session(),还有一种是交互式session，即tensorflow.InteractiveSession(). 使用Tensor.eval() 和Operation.run()方法代替Session.run(). 这样可以避免使用一个变量来持有会话, 为程序架构的设计添加了灵活性.</p></blockquote><h1 id="数据载体"><a href="#数据载体" class="headerlink" title="数据载体"></a>数据载体</h1><blockquote><p>Tensorflow体系下，变量（Variable）是用来维护图计算过程中的中间状态信息，是一种常见高频使用的数据载体，还有一种特殊的数据载体，那就是常量（Constant），主要是用作图处理过程的输入量。这些数据载体，也都是以Tensor的形式体现。变量定义和常量定义上，比较好理解：</p></blockquote><pre><code># 创建一个变量, 初始化为标量0.没有指定数据类型（dtype）state = tf.Variable(0, name=&quot;counter&quot;)# 创建一个常量，其值为1，没有指定数据类型（dtype）one = tf.constant(1)</code></pre><blockquote><p>针对上面的变量和常量，看看Tensorflow里面的函数定义：</p></blockquote><pre><code>class Variable(object):　def __init__(self,    initial_value=None,    trainable=True,    collections=None,    validate_shape=True,    caching_device=None,    name=None,    variable_def=None,    dtype=None,    expected_shape=None,    import_scope=None)：</code></pre><blockquote></blockquote><pre><code>def constant(value, dtype=None, shape=None, name=&quot;Const&quot;, verify_shape=False)：</code></pre><blockquote><p>从上面的源码可以看出，定义变量，其实就是定义了一个Variable的实例，而定义常量，其实就是调用了一下常量函数，创建了一个常量Tensor。</p></blockquote><blockquote><p>还有一个很重要的概念，那就是占位符placeholder，这个在Tensorflow中进行Feed数据灌入时，很有用。所谓的数据灌入，指的是在创建Tensorflow的图时，节点的输入部分，就是一个placeholder，后续在执行session操作的前，将实际数据Feed到图中，进行执行即可。</p></blockquote><pre><code>input1 = tf.placeholder(tf.types.float32)input2 = tf.placeholder(tf.types.float32)output = tf.mul(input1, input2)</code></pre><blockquote><pre><code>with tf.Session() as sess:  print sess.run([output], feed_dict={input1:[7.], input2:[2.]})</code></pre></blockquote><pre><code># 输出:# [array([ 14.], dtype=float32)]</code></pre><blockquote><p>占位符的定义原型，也是一个函数：</p></blockquote><pre><code>def placeholder(dtype, shape=None, name=None)：</code></pre><blockquote><p>到此，Tensorflow的入门级的基本知识介绍完了。下面，将结合一个MNIST的手写识别的例子，从代码上简单分析一下，源代码分成4个文件：</p></blockquote><hr><blockquote><p>main.py驱动程序</p></blockquote><pre><code>#!/usr/bin/env python# -*- coding: utf-8 -*-# @Time    : 2018/2/21 20:41# @Author  : Jasontang# @Site    : # @File    : main.py# @ToDo    : 驱动程序import _threadfrom neural_network_learning.hand_writting_refactor import mnist_train, mnist_evalif __name__ == &apos;__main__&apos;:    _thread.start_new_thread(mnist_train.main, (None,))    _thread.start_new_thread(mnist_eval.main, (None,))    # 这个不能删除，当做主线程    while 1:        pass</code></pre><blockquote><p>mnist_inference.py计算前向传播的过程及定义了神经网络的参数</p></blockquote><pre><code>#!/usr/bin/env python# -*- coding: utf-8 -*-# @Time    : 2018/2/20 19:43# @Author  : Jasontang# @Site    : # @File    : mnist_inference.py# @ToDo    : 定义了前向传播的过程及神经网络的参数import tensorflow as tf# 定义神经网络结构相关的参数INPUT_NODE = 784OUTPUT_NODE = 10LAYER1_NODE = 500# 训练时会创建这些变量，测试时会通过保存的模型加载这些变量的取值def get_weight_variable(shape, regularizer):    weights = tf.get_variable(&quot;weights&quot;, shape, initializer=tf.truncated_normal_initializer(stddev=0.1))    # 当使用正则化生成函数时,当前变量的正则化损失加入名字为losses的集合.    # 自定义集合    if regularizer:        tf.add_to_collection(&quot;losses&quot;, regularizer(weights))    return weights# 前向传播过程def inference(input_tensor, regularizer):    # 声明第一层神经网络的变量并完成前向传播过程    with tf.variable_scope(&quot;layer1&quot;):        weights = get_weight_variable([INPUT_NODE, LAYER1_NODE], regularizer)        biases = tf.get_variable(&quot;biases&quot;, [LAYER1_NODE], initializer=tf.constant_initializer(0.0))        layer1 = tf.nn.relu(tf.matmul(input_tensor, weights) + biases)    # 声明第二层圣经网络变量并完成前向传播过程    with tf.variable_scope(&quot;layer2&quot;):        weights = get_weight_variable([LAYER1_NODE, OUTPUT_NODE], regularizer)        biases = tf.get_variable(&quot;biases&quot;, [OUTPUT_NODE], initializer=tf.constant_initializer(0.0))        layer2 = tf.matmul(layer1, weights) + biases    # 返回最后前向传播的结果    return layer2</code></pre><blockquote><p>mnist_train.py定义了神经网络的训练过程</p></blockquote><pre><code>#!/usr/bin/env python# -*- coding: utf-8 -*-# @Time    : 2018/2/21 16:08# @Author  : Jasontang# @Site    : # @File    : mnist_train.py# @ToDo    : 定义了神经网络的训练过程import osimport tensorflow as tffrom tensorflow.examples.tutorials.mnist import input_dataimport neural_network_learning.hand_writting_refactor.mnist_inference as mnist_inference# 配置神经网络的参数BATCH_SIZE = 100LEARNING_REATE_BASE = 0.8LEARNING_RATE_DECAY = 0.99REGULARAZTION_RATE = 0.0001TRAING_STEPS = 2000MOVING_AVERAGE_DECAY = 0.99# 模型保存的路径和文件名MODEL_SAVE_PATH = &quot;./model/&quot;MODEL_NAME = &quot;model.ckpt&quot;def train(mnist):    # 定义输入输出placeholder    x = tf.placeholder(tf.float32, [None, mnist_inference.INPUT_NODE], name=&quot;input-x&quot;)    y_ = tf.placeholder(tf.float32, [None, mnist_inference.OUTPUT_NODE], name=&quot;input-y&quot;)    regularizer = tf.contrib.layers.l2_regularizer(REGULARAZTION_RATE)    y = mnist_inference.inference(x, regularizer)    global_step = tf.Variable(0, trainable=False)    variable_averages = tf.train.ExponentialMovingAverage(MOVING_AVERAGE_DECAY, global_step)    variables_average_op = variable_averages.apply(tf.trainable_variables())    cross_entropy = tf.nn.sparse_softmax_cross_entropy_with_logits(labels=tf.argmax(y_, 1), logits=y)    cross_entropy_mean = tf.reduce_mean(cross_entropy)    loss = cross_entropy_mean + tf.add_n(tf.get_collection(&quot;losses&quot;))    learing_rate = tf.train.exponential_decay(LEARNING_REATE_BASE,                                              global_step,                                              mnist.train.num_examples / BATCH_SIZE,                                              LEARNING_RATE_DECAY)    train_step = tf.train.GradientDescentOptimizer(learing_rate).minimize(loss, global_step)    with tf.control_dependencies([train_step, variables_average_op]):        train_op = tf.no_op(name=&quot;train&quot;)    # 初始化持久化类    saver = tf.train.Saver()    with tf.Session() as sess:        tf.global_variables_initializer().run()        for i in range(TRAING_STEPS):            xs, ys = mnist.train.next_batch(BATCH_SIZE)            _, loss_value, step = sess.run([train_op, loss, global_step], feed_dict={x: xs, y_: ys})            if i % 1000 == 0:                print(&quot;After %d training step(s), loss on training batch is %g.&quot; % (i, loss_value))                saver.save(sess, os.path.join(MODEL_SAVE_PATH, MODEL_NAME), global_step=global_step)def main(argv=None):    mnist = input_data.read_data_sets(&quot;../MNIST_data&quot;, one_hot=True)    train(mnist)if __name__ == &apos;__main__&apos;:    tf.app.run()</code></pre><blockquote><p>mnist_eval.py测试过程</p></blockquote><pre><code>#!/usr/bin/env python# -*- coding: utf-8 -*-# @Time    : 2018/2/21 16:32# @Author  : Jasontang# @Site    : # @File    : mnist_eval.py# @ToDo    : 测试过程import timeimport tensorflow as tffrom tensorflow.examples.tutorials.mnist import input_dataimport neural_network_learning.hand_writting_refactor.mnist_inference as mnist_inferenceimport neural_network_learning.hand_writting_refactor.mnist_train as mnist_train# 每10s加载一次最新模型，并在测试数据上测试最新模型的正确率EVAL_INTERVAL_SECS = 10def evaluate(mnist):    x = tf.placeholder(tf.float32, [None, mnist_inference.INPUT_NODE], name=&quot;input-x&quot;)    y_ = tf.placeholder(tf.float32, [None, mnist_inference.OUTPUT_NODE], name=&quot;input-y&quot;)    validate_feed = {x: mnist.validation.images,                     y_: mnist.validation.labels}    y = mnist_inference.inference(x, None)    correct_prediction = tf.equal(tf.argmax(y, 1), tf.argmax(y_, 1))    accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))    variable_averages = tf.train.ExponentialMovingAverage(mnist_train.MOVING_AVERAGE_DECAY)    variables_to_restore = variable_averages.variables_to_restore()    saver = tf.train.Saver(variables_to_restore)    # 每隔EVAL_INTERVAL_SECS秒调用一次计算正确率的过程以检测训练过程中正确率的变化    stop_count = 0    while True:        with tf.Session() as sess:            ckpt = tf.train.get_checkpoint_state(mnist_train.MODEL_SAVE_PATH)            # 停止条件 #            stop_count += EVAL_INTERVAL_SECS            if stop_count == mnist_train.TRAING_STEPS:                return            # 停止条件 #            if ckpt and ckpt.model_checkpoint_path:                saver.restore(sess, ckpt.model_checkpoint_path)                # 通过文件名得到模型保存时迭代的轮数                # 输出./model/model.ckpt-29001                print(ckpt.model_checkpoint_path)                global_step = ckpt.model_checkpoint_path.split(&quot;/&quot;)[-1].split(&quot;-&quot;)[-1]                accuracy_score = sess.run(accuracy, feed_dict=validate_feed)                print(&quot;After %s training step(s), validation accuracy is %g&quot; % (global_step, accuracy_score))            else:                print(&quot;No checkpoint file found&quot;)                return        time.sleep(EVAL_INTERVAL_SECS)def main(argv=None):    mnist = input_data.read_data_sets(&quot;../MNIST_data&quot;, one_hot=True)    evaluate(mnist)if __name__ == &apos;__main__&apos;:    tf.app.run()</code></pre><h1 id="参考文章"><a href="#参考文章" class="headerlink" title="参考文章"></a>参考文章</h1><p><a href="https://www.cnblogs.com/shihuc/p/6648130.html" title="Tensorflow之基于MNIST手写识别的入门介绍" target="_blank" rel="noopener">https://www.cnblogs.com/shihuc/p/6648130.html</a></p>]]></content>
+      
+      <categories>
+          
+          <category> tensorflow学习 </category>
+          
+          <category> tensorflow-Demo </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> Mnist </tag>
+            
+            <tag> tensorflow </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    <entry>
+      <title>直方图均衡化图片</title>
+      <link href="/2018/03/20/%E7%9B%B4%E6%96%B9%E5%9B%BE%E5%9D%87%E8%A1%A1%E5%8C%96%E5%9B%BE%E7%89%87/"/>
+      <content type="html"><![CDATA[<h1 id="直方图均衡化"><a href="#直方图均衡化" class="headerlink" title="直方图均衡化"></a>直方图均衡化</h1><ul><li>1.实验原理<blockquote><p>用直方图变换方法进行图像增强，通过改变图像的直方图来概念图像中像素的灰度，以达到图像增强的目的。</p></blockquote></li></ul><ul><li>2.实验步骤<blockquote><p>   1、对图像进行灰度统计，求灰度统计直方图。</p><p>   2、对灰度统计直方图进行归一化。</p><p>   3、求累积分布函数，求累积分布直方图。</p><p>   4、对累积直方图各项进行取整扩展tk=int[(L-1)tk + 0.5].</p><p>   5、确定映射对应关系，根据映射关系计算均衡化直方图。</p></blockquote></li></ul><a id="more"></a><ul><li>3.代码</li></ul><blockquote><p>代码采用python2.0实现   </p></blockquote><pre><code>#!/usr/bin/env python# -*- coding: utf-8 -*-# @Time    : 2017/10/15 18:49# @Author  : Jasontang# @Site    : # @File    : histequa.py# @ToDo    : 直方图均衡化(8bit)from PIL import Imageimport matplotlib as mplimport matplotlib.pyplot as pltimport numpy as npmpl.rcParams[&apos;font.sans-serif&apos;] = &quot;SimHei&quot;mpl.rcParams[&apos;axes.unicode_minus&apos;] = Falsedef image2vector():    return np.array(Image.open(&quot;images/lena512.bmp&quot;, &quot;r&quot;).convert(&quot;L&quot;))def equalization(data):    # 得到图像的高度、宽度    h = data.shape[0]    w = data.shape[1]    # 灰度数组    grayArr = np.zeros(255)    # 进行像素灰度统计    for i in range(h):        for j in range(w):            grayArr[data[i][j]] += 1    print grayArr.shape, grayArr.max()    # 归一化    idx = 0    for item in grayArr:        grayArr[idx] = item / (h * w)        idx += 1    # print grayArr    cdf = np.zeros(grayArr.shape)    sum = 0    # 计算灰度分布密度    # print cdf.shape    for i in range(len(grayArr)):        sum += grayArr[i]        cdf[i] = sum    L = 255    # print cdf    # 累计分布取整    indexArr = ((L - 1) * cdf + 0.5).astype(np.uint8)    # print indexArr    # 对灰度值进行映射（均衡化）    for i in range(h):        for j in range(w):            data[i, j] = indexArr[data[i, j]]    return grayArr, cdf, dataif __name__ == &apos;__main__&apos;:    data = image2vector()    # print data.shape    plt.figure(figsize=(7, 9))    plt.subplot(321)    plt.title(u&quot;原始图像&quot;)    plt.imshow(data, cmap=&apos;gray&apos;)    plt.subplot(322)    plt.title(u&quot;原始灰度&quot;)    plt.hist(data.flatten(), normed=True, bins=256)    srcGray, cdf, equlArr = equalization(data)    plt.subplot(323)    plt.title(u&quot;归一化直方图&quot;)    plt.hist(srcGray, 255)    plt.subplot(324)    plt.title(u&quot;累积直方图&quot;)    plt.hist(cdf, 255)    plt.subplot(325)    plt.title(u&quot;均衡化图像&quot;)    plt.imshow(equlArr, cmap=&apos;gray&apos;)    plt.subplot(326)    plt.title(u&quot;均衡化的直方图&quot;)    plt.hist(equlArr.flatten(), normed=True, bins=256)    # print equlArr    plt.tight_layout(0.3, rect=(0, 0, 1, 0.92))    plt.show()</code></pre><ul><li>4.实验结果<br><img src="https://mic-jasontang.github.io/imgs/histequa.png" alt="实验结果"></li></ul><ul><li>5.实验总结<blockquote><p>在对数据进行归一化的时候，是用每个灰度值除以像素总数。在最后通过映射关系计算均衡化直方图时，是借助求出的映射关系，直接对原图的像素点进行映射。通过均衡化能增强图像的动态范围偏小的图像的反差，达到增强图像整体对比度的效果。</p></blockquote></li></ul>]]></content>
+      
+      <categories>
+          
+          <category> 图像处理 </category>
+          
+          <category> 图像增强 </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> 图像处理 </tag>
+            
+            <tag> python </tag>
+            
+            <tag> 直方图均衡化 </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    <entry>
+      <title>图像与常用算子进行卷积运算</title>
+      <link href="/2018/03/19/%E5%9B%BE%E5%83%8F%E5%B8%B8%E7%94%A8%E7%AE%97%E5%AD%90%E8%BF%9B%E8%A1%8C%E5%8D%B7%E7%A7%AF%E8%BF%90%E7%AE%97/"/>
+      <content type="html"><![CDATA[<blockquote><p>图像卷积实验，使用guass、soble、prewitt、 laplacian算子进行图像增强。</p></blockquote><a id="more"></a><h1 id="实现代码"><a href="#实现代码" class="headerlink" title="实现代码"></a>实现代码</h1><pre><code>#!/usr/bin/env python# -*- coding: utf-8 -*-# @Time    : 2017/9/18 16:57# @Author  : Jasontang# @Site    : # @File    : image_convolve.py# @ToDo    :  图像卷积import numpy as npimport osfrom PIL import Imagedef convolve(image, weight):    height, width = image.shape    h, w = weight.shape    height_new = height - h + 1    width_new = width - w + 1    print image.shape    image_new = np.zeros((height_new, width_new), dtype=np.float)    for i in range(height_new):        for j in range(width_new):            image_new[i, j] = np.sum(image[i:i + h, j:j + w] * weight)    image_new = image_new.clip(0, 255)    image_new = np.rint(image_new).astype(&quot;uint8&quot;)    print image_new.shape    return image_new# image_new = 255 * (image_new - image_new.min()) / (image_new.max() - image_new.min())if __name__ == &apos;__main__&apos;:    image = Image.open(&quot;son.png&quot;, &quot;r&quot;)    output_path = &quot;.\\ImageConvolve\\&quot;    if not os.path.exists(output_path):        os.mkdir(output_path)    a = np.array(image)    avg3 = np.ones((3, 3))    avg3 /= avg3.sum()    avg5 = np.ones((5, 5))    avg5 /= avg5.sum()    gauss = np.array(([0.003, 0.013, 0.022, 0.013, 0.003],                      [0.013, 0.059, 0.097, 0.059, 0.013],                      [0.022, 0.097, 0.159, 0.097, 0.022],                      [0.013, 0.059, 0.097, 0.059, 0.013],                      [0.003, 0.013, 0.022, 0.013, 0.003]))    soble_x = np.array(([-1, 0, 1], [-2, 0, 2], [-1, 0, 1]))    soble_y = np.array(([-1, -2, -1], [0, 0, 0], [1, 2, 1]))    soble = np.array(([-1, -1, 0], [-1, 0, 1], [0, 1, 1]))    prewitt_x = np.array(([-1, 0, 1], [-1, 0, 1], [-1, 0, 1]))    prewitt_y = np.array(([-1, -1, -1], [0, 0, 0], [1, 1, 1]))    prewitt = np.array(([-2, -1, 0], [-1, 0, 1], [0, 1, 2]))    laplacian4 = np.array(([0, -1, 0], [-1, 4, -1], [0, -1, 0]))    laplacian8 = np.array(([-1, -1, -1], [-1, 8, -1], [-1, -1, -1]))    weight_list = (        &apos;avg3&apos;, &apos;avg5&apos;, &apos;gauss&apos;, &apos;soble_x&apos;, &apos;soble_y&apos;, &apos;soble&apos;, &apos;prewitt_x&apos;, &apos;prewitt_y&apos;, &apos;prewitt&apos;, &apos;laplacian4&apos;,        &apos;laplacian8&apos;)    print &quot;梯度检测&quot;    for weight in weight_list:        print weight, &quot;R&quot;,        R = convolve(a[:, :, 0], eval(weight))        print &quot;G&quot;,        G = convolve(a[:, :, 1], eval(weight))        print &quot;B&quot;        B = convolve(a[:, :, 2], eval(weight))        I = np.stack((R, G, B), 2)    # Image.fromarray(I).save(output_path + weight + &quot;.png&quot;)</code></pre><h1 id="实验结果"><a href="#实验结果" class="headerlink" title="实验结果"></a>实验结果</h1><p><img src="https://mic-jasontang.github.io/imgs/img-cov.png" alt="图像卷积运算实验结果"></p>]]></content>
+      
+      <categories>
+          
+          <category> 图像处理 </category>
+          
+          <category> 图像增强 </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> 图像处理 </tag>
+            
+            <tag> 卷积运算 </tag>
+            
+            <tag> guass </tag>
+            
+            <tag> soble </tag>
+            
+            <tag> prewitt </tag>
+            
+            <tag> laplacian </tag>
+            
+        </tags>
+      
+    </entry>
+    
+  
+  
+    
+    <entry>
+      <title>关于</title>
+      <link href="/about/index.html"/>
+      <content type="html"><![CDATA[<p>大家好，我是tech.radish。欢迎来到我的个人技术博客。</p>]]></content>
+    </entry>
+    
+    <entry>
+      <title>读书</title>
+      <link href="/reading/index.html"/>
+      <content type="html"><![CDATA[<h1 id="我想读"><a href="#我想读" class="headerlink" title="我想读"></a>我想读</h1><p>书籍1</p><hr><p>书籍2</p>]]></content>
+    </entry>
+    
+  
+</search>
