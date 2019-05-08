@@ -77,3 +77,9 @@ mathjax: true
 
 # 是否启用网页计数器（使用不蒜子插件）
 page_stat: true
+
+# 启用字数统计
+#word_count: true
+
+#no_word_count: false
+
