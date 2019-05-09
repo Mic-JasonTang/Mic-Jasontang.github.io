@@ -544,19 +544,12 @@ b. 风格迁移需要定义它的损失函数，内容损失L_content和风格�
         </div>
     </div>
     
-
-    <div class="footer-copyright green-link-context">
-        <div class="container">
-            © 2019 tech.radish <i class="fa fa fa-heart"></i>
-            <p class="right" style="margin-top: 0;">本博客由 <a href="https://hexo.io"><span style="color:#fff">Hexo</span></a> 强力驱动</p>
-        </div>
-    </div>
-    <span id="timeDate">载入天数...</span><span id="times">载入时分秒...</span>
+    
     <script>
         var now = new Date(); 
         function createtime() { 
             var grt= new Date("03/19/2018 12:00:00");
-            now.setTime(now.getElementByIdime()+250); 
+            now.setTime(now.getTime()+250); 
             days = (now - grt ) / 1000 / 60 / 60 / 24; dnum = Math.floor(days); 
             hours = (now - grt ) / 1000 / 60 / 60 - (24 * dnum); hnum = Math.floor(hours); 
             if(String(hnum).length ==1 ){hnum = "0" + hnum;} minutes = (now - grt ) / 1000 /60 - (24 * 60 * dnum) - (60 * hnum); 
@@ -568,6 +561,14 @@ b. 风格迁移需要定义它的损失函数，内容损失L_content和风格�
         } 
         setInterval("createtime()",250);
     </script>
+    <div class="footer-copyright green-link-context">
+        <div class="container">
+            © 2019 tech.radish <i class="fa fa fa-heart"></i>
+            <span style="margin-left:60px"> <span id="timeDate">载入天数...</span><span id="times">载入时分秒...</span> </span>
+            <p class="right" style="margin-top: 0;">本博客由 <a href="https://hexo.io"><span style="color:#fff">Hexo</span></a> 强力驱动</p>
+        </div>
+    </div>
+    
 </footer>
 
 
