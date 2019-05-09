@@ -16,9 +16,9 @@
       
         <tags>
             
-            <tag> YOLO </tag>
-            
             <tag> deep learning </tag>
+            
+            <tag> YOLO </tag>
             
             <tag> 目标检测 </tag>
             
@@ -114,11 +114,11 @@
       
         <tags>
             
+            <tag> deep learning </tag>
+            
             <tag> YOLO </tag>
             
             <tag> Attention </tag>
-            
-            <tag> deep learning </tag>
             
         </tags>
       
@@ -162,11 +162,11 @@
       
         <tags>
             
-            <tag> deep learning </tag>
-            
             <tag> 风格迁移 </tag>
             
             <tag> 序列模型 </tag>
+            
+            <tag> deep learning </tag>
             
         </tags>
       

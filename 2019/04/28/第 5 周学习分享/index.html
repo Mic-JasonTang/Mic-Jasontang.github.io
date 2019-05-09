@@ -171,16 +171,16 @@
             
 
             <li class="collapse-level-0" collapse-level="0">
-                <a class="no-padding" href="/categories/数学基础/">
-                    数学基础 <span class="right">1 篇</span></a>
+                <a class="no-padding" href="/categories/技术文章/">
+                    技术文章 <span class="right">1 篇</span></a>
                 
             </li>
 
         
 
             <li class="collapse-level-1" collapse-level="1">
-                <a class="no-padding" href="/categories/数学基础/随机过程/">
-                    随机过程 <span class="right">1 篇</span></a>
+                <a class="no-padding" href="/categories/技术文章/博客搭建/">
+                    博客搭建 <span class="right">1 篇</span></a>
                 
             </li>
 
@@ -211,16 +211,16 @@
         
 
             <li class="collapse-level-0" collapse-level="0">
-                <a class="no-padding" href="/categories/技术文章/">
-                    技术文章 <span class="right">1 篇</span></a>
+                <a class="no-padding" href="/categories/数学基础/">
+                    数学基础 <span class="right">1 篇</span></a>
                 
             </li>
 
         
 
             <li class="collapse-level-1" collapse-level="1">
-                <a class="no-padding" href="/categories/技术文章/博客搭建/">
-                    博客搭建 <span class="right">1 篇</span></a>
+                <a class="no-padding" href="/categories/数学基础/随机过程/">
+                    随机过程 <span class="right">1 篇</span></a>
                 
             </li>
 
@@ -528,7 +528,7 @@
             </div>
             
 
-            <div class="col m6 s12">
+            <div class="col m4 s12">
                 <h5 class="white-text">访问次数</h5>
                 <script>
     var now = new Date(); 
@@ -541,7 +541,7 @@
         mnum = Math.floor(minutes); if(String(mnum).length ==1 ){mnum = "0" + mnum;} 
         seconds = (now - grt ) / 1000 - (24 * 60 * 60 * dnum) - (60 * 60 * hnum) - (60 * mnum); 
         snum = Math.round(seconds); if(String(snum).length ==1 ){snum = "0" + snum;} 
-        document.getElementById("timeDate").innerHTML = "本站已安全运行 "+dnum+" 天 "; 
+        document.getElementById("timeDate").innerHTML = "<i class='fa fa-clock-o'> </i>" + dnum + " 天 "; 
         document.getElementById("times").innerHTML = hnum + " 小时 " + mnum + " 分 " + snum + " 秒"; 
     } 
     setInterval("createtime()",250);
@@ -564,7 +564,6 @@
     </div>
 
 
-                
             </div>
         </div>
     </div>
