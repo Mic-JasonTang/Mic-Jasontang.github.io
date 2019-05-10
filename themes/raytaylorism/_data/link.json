@@ -1,11 +1,11 @@
 {
     "social": {
-
-        "github": "https://github.com/mic-jasontang"
-		
+        "github": "https://github.com/mic-jasontang",
+		"envelope": "mailto:sunshinetown16@gmail.com"
     },
     "extern": {
 
-		"Github地址": "https://github.com/mic-jasontang"
+		"Github": "https://github.com/mic-jasontang",
+		"CSDN博客": "https://blog.csdn.net/q361239731"
     }
 }

@@ -10,27 +10,32 @@
                         <i class="fa fa-2x fa-<%= type %>"></i>
                     </a>
                 <% } %>
-                <%- partial('plugin/page_stat') %>
             </div>
             <% } %>
 
             <% if (site.data.link && site.data.link.extern) { %>
-            <div class="col m8 s12">
+            <div class="col m4 s12">
                 <h5 class="white-text"><%= __('blogroll') %></h5>
                 <% for (var name in site.data.link.extern) { %>
                     <a class="social-link" href="<%= site.data.link.extern[name] %>" target="_blank"><%= name %></a>
                 <% } %>
             </div>
             <% } %>
+
+            <div class="col m4 s12">
+                <h5 class="white-text"><%= __('visit_times') %></h5>
+                <%- partial('plugin/page_stat') %>
+            </div>
         </div>
     </div>
     <% } %>
-
+    
     <div class="footer-copyright <%= theme.color.link %>-link-context">
         <div class="container">
             <%= theme.copyright %> <i class="fa fa fa-heart"></i>
             <p class="right" style="margin-top: 0;"><%= __('powered.first') %> <a href="https://hexo.io"><span style="color:#fff">Hexo</span></a> 强力驱动</p>
         </div>
     </div>
+    
 </footer>
 

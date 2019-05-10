@@ -9,11 +9,7 @@
             <div class="article-title">
                 <%- partial('post/title') %>
             </div>
-            <%- partial('post/time') %>
-			<div style="float: right;color: #E91E63"> 
-                阅读次数: <span id="busuanzi_value_page_pv"></span>
-			</div>
-            <%- partial('post/readtimes') %>
+            <%- partial('post/word', {post: item, showTimes: true}) %>
             <%- partial('post/tag') %>
             <%- partial('post/tablecontents') %>
 

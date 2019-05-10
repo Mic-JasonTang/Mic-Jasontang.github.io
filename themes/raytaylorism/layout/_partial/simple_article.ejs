@@ -4,8 +4,7 @@
             <div class="article-title">
                 <%- partial('post/title') %>
             </div>
-
-            <%- partial('post/time') %>
+            <%- partial('post/word', {post: item, showTimes: false}) %>
             <%- partial('post/tag') %>
 
             <% if (showEntry && item.excerpt && index) { %>

@@ -1,19 +1,19 @@
-[{			  
-    "image": "https://mic-jasontang.github.io/imgs/coloreggs.jpg",
-    "align": "center",
-    "title": "computer vision",
-    "subtitle": "whole world",
-	"link": "/"
-},{			  
-    "image": "https://mic-jasontang.github.io/imgs/wall.png",
+[{            
+    "image": "/css/images/machine-api.jpg",
     "align": "left",
-    "title": "import tensorflow as tf",
-    "subtitle": "sess.run(hello)",
-	"link": null
-}, {
-    "image": "https://mic-jasontang.github.io/imgs/pythoner.png",
+    "title": "擅长领域",
+    "subtitle": "CV DL ML Java Web",
+    "link": null
+},{           
+    "image": "/css/images/sky-night.jpg",
     "align": "right",
-    "title": "import  __helloworld__",
-    "subtitle": ">>> Hello World",
-	"link": null
+    "title": "掌握语言&技能",
+    "subtitle": "C/C++ Java Python linux git",
+    "link": null
+}, {
+    "image": "/css/images/banner.jpg",
+    "align": "center",
+    "title": "个人介绍",
+    "subtitle": "了解我",
+    "link": "/about"
 }]

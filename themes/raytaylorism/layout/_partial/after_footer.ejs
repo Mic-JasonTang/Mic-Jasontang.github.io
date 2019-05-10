@@ -2,11 +2,20 @@
 
 <script src="<%- config.root %>js/jquery.min.js"></script>
 <script src="<%- config.root %>js/materialize.min.js"></script>
-<script async src="//dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js">
-</script>
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+<% if (theme.background_animation){ %>
+	<script src="<%- config.root %>js/love.js"></script>
+	<script src="<%- config.root %>js/float.js"></script>
+	<script src="<%- config.root %>js/typewriter.js"></script>
+	<script color=0,104,183 opacity=1 zindex=-1 count=50 src="<%- config.root %>js/particle.js"></script>
+<% } %>
 
 <%- partial('plugin/main_javascript') %>
 
 <%- partial('plugin/google_code_prettify') %>
 <%- partial('plugin/analytics') %>
-<%- partial('plugin/mathjax') %>
+
+<% if (theme.mathjax){ %>
+    <%- partial('plugin/mathjax') %>
+<% } %>

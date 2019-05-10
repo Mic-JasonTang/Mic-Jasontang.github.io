@@ -53,7 +53,7 @@ color:
 archive_yearly: true
 
 # 版权信息
-copyright: © 2018 tech.radish
+copyright: © 2019 tech.radish
 
 # Support for LiveRe comments system.
 # You can get your uid from https://livere.com/insight/myCode (General web site)
@@ -83,3 +83,5 @@ page_stat: true
 
 #no_word_count: false
 
+# 鼠标动画
+background_animation: true
