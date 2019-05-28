@@ -7,13 +7,22 @@
 
     
 
-    <title>第 2 页 | 归档：2018/3 | tech.radish</title>
+    <title>Adaboost 算法介绍 | tech.radish</title>
     <meta name="author" content="yang.tang">
+    
+    <meta name="description" content="作者：鲁力
+原文：https://github.com/datawhalechina/Daily-interview/tree/master/machine-learning            
+联系方式：jieyuhuayang@foxmail.com
+
+1. Adaboost简介1.1 集成学习（ensemble learning）背景介绍集成学习（ensemble learning）通过构建并结合多个学习器（learner）来完成学习任务，通常可获得比单一学习器更良好的泛化性能（特别是在集成弱学习器（weak learner）时）。  
+目前集成学习主要分为2大类：  
+一类是以bagging、Random Forest等算法为代表的，各个学习器之间相互独立、可同时生成的并行化方法；
+一类是以boosting、Adaboost等算法为代表的，个体学习器是串行序列化生成的、具有依赖关系，它试图不断增强单个学习器的学习能力。">
     
     
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
-    
+    <meta property="og:title" content="Adaboost 算法介绍">
     <meta property="og:site_name" content="tech.radish">
 
     
@@ -185,22 +194,6 @@
         
 
             <li class="collapse-level-0" collapse-level="0">
-                <a class="no-padding" href="/categories/数学基础/">
-                    数学基础 <span class="right">1 篇</span></a>
-                
-            </li>
-
-        
-
-            <li class="collapse-level-1" collapse-level="1">
-                <a class="no-padding" href="/categories/数学基础/随机过程/">
-                    随机过程 <span class="right">1 篇</span></a>
-                
-            </li>
-
-        
-
-            <li class="collapse-level-0" collapse-level="0">
                 <a class="no-padding" href="/categories/基础算法/">
                     基础算法 <span class="right">2 篇</span></a>
                 
@@ -219,6 +212,22 @@
             <li class="collapse-level-1" collapse-level="1">
                 <a class="no-padding" href="/categories/基础算法/字符串/">
                     字符串 <span class="right">1 篇</span></a>
+                
+            </li>
+
+        
+
+            <li class="collapse-level-0" collapse-level="0">
+                <a class="no-padding" href="/categories/数学基础/">
+                    数学基础 <span class="right">1 篇</span></a>
+                
+            </li>
+
+        
+
+            <li class="collapse-level-1" collapse-level="1">
+                <a class="no-padding" href="/categories/数学基础/随机过程/">
+                    随机过程 <span class="right">1 篇</span></a>
                 
             </li>
 
@@ -259,6 +268,22 @@
             <li class="collapse-level-1" collapse-level="1">
                 <a class="no-padding" href="/categories/研磨-粗糙度/研磨表面仿真/">
                     研磨表面仿真 <span class="right">1 篇</span></a>
+                
+            </li>
+
+        
+
+            <li class="collapse-level-0" collapse-level="0">
+                <a class="no-padding" href="/categories/Interview/">
+                    Interview <span class="right">1 篇</span></a>
+                
+            </li>
+
+        
+
+            <li class="collapse-level-1" collapse-level="1">
+                <a class="no-padding" href="/categories/Interview/Machine-Learning/">
+                    Machine-Learning <span class="right">1 篇</span></a>
                 
             </li>
 
@@ -319,52 +344,142 @@
 
     <main>
         <div class="container main-container">
-    
-
-<nav class="page-nav hide-on-small-only">
+    <nav class="page-nav hide-on-small-only">
     <div class="nav-wrapper indigo">
-        <span class="breadcrumb">当前位置（归档）</span>
+        <span class="breadcrumb">当前位置（分类目录）</span>
+        
+            
+    
+    
+    <a class="breadcrumb" href="/categories/Interview/">Interview</a><a class="breadcrumb" href="/categories/Interview/Machine-Learning/">Machine Learning</a>
+
+
         
 
         
     </div>
 </nav>
 
+<article>
+    <div class="card">
+        <div class="card-content">
+            
+
+            <div class="article-title">
+                
+    
+        <h1>Adaboost 算法介绍</h1>
+    
 
 
-    <ul class="collapsible mt-0" data-collapsible="accordion">
+            </div>
+            <div style="margin-top:10px;">
+    <span class="post-time">
+      <i class="fa fa-calendar"></i>
+      <time class="green-link-context" datetime="2019-05-28T07:57:05.000Z"><a href="/2019/05/28/Adaboost/">2019-05-28</a></time>
+
+      &nbsp; | &nbsp;
+    </span>
+
+    <span class="post-time">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-keyboard-o"></i>
+        <span class="post-meta-item-text">  字数统计: </span>
+        <span class="post-count">199字</span>
+      </span>
+    </span>
+
+    <span class="post-time">
+      &nbsp; | &nbsp;
+      <span class="post-meta-item-icon">
+        <i class="fa fa-hourglass-half"></i>
+        <span class="post-meta-item-text">  阅读时长: </span>
+        <span class="post-count">1分</span>
+      </span>
+    </span>
+    
+      <span class="post-time">
+        <div style="float: right;color: #E91E63"> 
+          阅读次数: <span id="busuanzi_value_page_pv"></span>
+        </div>
+        <span id="busuanzi_container_page_pv" class="read-times-container">
+    <span id="busuanzi_value_page_pv"></span>
+</span>
+
+      </span>
+    
+</div>
+            
+    <div class="tags-row">
         
+            <a href="/tags/ML/" class="chip pink lighten-1">ML</a>
         
-            <li>
-                <div class="collapsible-header active">
-                    <i class="fa fa-archive"></i>2018
-                </div>
-                <div class="collapsible-body">
-                    <div class="collection">
-                        
-                            <a href="/2018/03/20/Mnist手写数字识别-tensorflow/" class="collection-item grey-text text-darken-1">
-                                <time datetime="2018-03-20T13:35:05.000Z">2018-03-20</time>
-                                <span>&nbsp;&nbsp;&nbsp;</span>
-                                Mnist手写数字体识别(tensorflow)
-                            </a>
-                        
-                            <a href="/2018/03/20/直方图均衡化图片/" class="collection-item grey-text text-darken-1">
-                                <time datetime="2018-03-20T10:31:55.000Z">2018-03-20</time>
-                                <span>&nbsp;&nbsp;&nbsp;</span>
-                                直方图均衡化图片
-                            </a>
-                        
-                            <a href="/2018/03/19/图像常用算子进行卷积运算/" class="collection-item grey-text text-darken-1">
-                                <time datetime="2018-03-19T11:11:57.000Z">2018-03-19</time>
-                                <span>&nbsp;&nbsp;&nbsp;</span>
-                                图像与常用算子进行卷积运算
-                            </a>
-                        
-                    </div>
-                </div>
-            </li>
+            <a href="/tags/Adaboost/" class="chip pink lighten-1">Adaboost</a>
         
-    </ul>
+    </div>
+
+
+            <div class="toc green-link-context hide-on-med-and-down">
+    <ol class="section table-of-contents"><li class="section table-of-contents-item section table-of-contents-level-2"><a class="section table-of-contents-link" href="#1-Adaboost简介"><span class="section table-of-contents-text">1. Adaboost简介</span></a><ol class="section table-of-contents-child"><li class="section table-of-contents-item section table-of-contents-level-3"><a class="section table-of-contents-link" href="#1-1-集成学习（ensemble-learning）背景介绍"><span class="section table-of-contents-text">1.1 集成学习（ensemble learning）背景介绍</span></a></li></ol></li></ol>
+</div>
+
+
+            <div class="entry green-link-context">
+                <ul>
+<li>作者：鲁力</li>
+<li>原文：<a href="https://github.com/datawhalechina/Daily-interview/tree/master/machine-learning" target="_blank" rel="noopener">https://github.com/datawhalechina/Daily-interview/tree/master/machine-learning</a>            </li>
+<li>联系方式：<a href="mailto:jieyuhuayang@foxmail.com" target="_blank" rel="noopener">jieyuhuayang@foxmail.com</a></li>
+</ul>
+<h2 id="1-Adaboost简介"><a href="#1-Adaboost简介" class="headerlink" title="1. Adaboost简介"></a>1. Adaboost简介</h2><h3 id="1-1-集成学习（ensemble-learning）背景介绍"><a href="#1-1-集成学习（ensemble-learning）背景介绍" class="headerlink" title="1.1 集成学习（ensemble learning）背景介绍"></a>1.1 集成学习（ensemble learning）背景介绍</h3><p>集成学习（ensemble learning）通过构建并结合多个学习器（learner）来完成学习任务，通常可获得比单一学习器更良好的泛化性能（特别是在集成弱学习器（weak learner）时）。  </p>
+<p>目前集成学习主要分为2大类：  </p>
+<p>一类是以bagging、Random Forest等算法为代表的，<strong>各个学习器之间相互独立、可同时生成</strong>的并行化方法；</p>
+<p>一类是以boosting、Adaboost等算法为代表的，<strong>个体学习器是串行序列化生成的、具有依赖关系</strong>，它试图不断增强单个学习器的学习能力。<br><a id="more"></a></p>
+<p><a href="https://blog.csdn.net/q361239731/article/details/90645040" target="_blank" rel="noopener">阅读更多</a></p>
+
+                
+
+
+<p class="green-link-context">
+    <a href="/2019/05/08/第 7 周学习分享/" rel="next" title="学习基于深度学习的目标检测框架">
+    下一篇：学习基于深度学习的目标检测框架
+  </a>
+</p>
+
+
+            </div>
+			
+        </div>
+    </div>
+</article>
+
+
+
+
+
+
+
+
+	<!-- 来必力City版安装代码 -->
+<div id="lv-container" data-id="city" data-uid="MTAyMC8zNTAzNy8xMTU3Mw==">
+	<script type="text/javascript">
+   (function(d, s) {
+       var j, e = d.getElementsByTagName(s)[0];
+
+       if (typeof LivereTower === 'function') { return; }
+
+       j = d.createElement(s);
+       j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+       j.async = true;
+
+       e.parentNode.insertBefore(j, e);
+   })(document, 'script');
+	</script>
+<noscript> 为正常使用来必力评论功能请激活JavaScript</noscript>
+</div>
+<!-- City版安装代码已完成 -->
+
+
+
 
 
 </div>

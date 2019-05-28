@@ -209,22 +209,6 @@
         
 
             <li class="collapse-level-0" collapse-level="0">
-                <a class="no-padding" href="/categories/图像处理/">
-                    图像处理 <span class="right">2 篇</span></a>
-                
-            </li>
-
-        
-
-            <li class="collapse-level-1" collapse-level="1">
-                <a class="no-padding" href="/categories/图像处理/图像增强/">
-                    图像增强 <span class="right">2 篇</span></a>
-                
-            </li>
-
-        
-
-            <li class="collapse-level-0" collapse-level="0">
                 <a class="no-padding" href="/categories/数学基础/">
                     数学基础 <span class="right">1 篇</span></a>
                 
@@ -235,6 +219,22 @@
             <li class="collapse-level-1" collapse-level="1">
                 <a class="no-padding" href="/categories/数学基础/随机过程/">
                     随机过程 <span class="right">1 篇</span></a>
+                
+            </li>
+
+        
+
+            <li class="collapse-level-0" collapse-level="0">
+                <a class="no-padding" href="/categories/图像处理/">
+                    图像处理 <span class="right">2 篇</span></a>
+                
+            </li>
+
+        
+
+            <li class="collapse-level-1" collapse-level="1">
+                <a class="no-padding" href="/categories/图像处理/图像增强/">
+                    图像增强 <span class="right">2 篇</span></a>
                 
             </li>
 
@@ -259,6 +259,22 @@
             <li class="collapse-level-1" collapse-level="1">
                 <a class="no-padding" href="/categories/研磨-粗糙度/研磨表面仿真/">
                     研磨表面仿真 <span class="right">1 篇</span></a>
+                
+            </li>
+
+        
+
+            <li class="collapse-level-0" collapse-level="0">
+                <a class="no-padding" href="/categories/Interview/">
+                    Interview <span class="right">1 篇</span></a>
+                
+            </li>
+
+        
+
+            <li class="collapse-level-1" collapse-level="1">
+                <a class="no-padding" href="/categories/Interview/Machine-Learning/">
+                    Machine-Learning <span class="right">1 篇</span></a>
                 
             </li>
 
@@ -359,6 +375,78 @@
 
 
 <div id="article-list" class="container main-container">
+    
+        <article class="simple-article">
+    <div class="card">
+        <div class="card-content">
+            <div class="article-title">
+                
+    
+        <h1 class="-link-context"><a href="/2019/05/28/Adaboost/">Adaboost 算法介绍</a></h1>
+    
+
+
+            </div>
+            <div style="margin-top:10px;">
+    <span class="post-time">
+      <i class="fa fa-calendar"></i>
+      <time class="green-link-context" datetime="2019-05-28T07:57:05.000Z"><a href="/2019/05/28/Adaboost/">2019-05-28</a></time>
+
+      &nbsp; | &nbsp;
+    </span>
+
+    <span class="post-time">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-keyboard-o"></i>
+        <span class="post-meta-item-text">  字数统计: </span>
+        <span class="post-count">199字</span>
+      </span>
+    </span>
+
+    <span class="post-time">
+      &nbsp; | &nbsp;
+      <span class="post-meta-item-icon">
+        <i class="fa fa-hourglass-half"></i>
+        <span class="post-meta-item-text">  阅读时长: </span>
+        <span class="post-count">1分</span>
+      </span>
+    </span>
+    
+</div>
+            
+    <div class="tags-row">
+        
+            <a href="/tags/ML/" class="chip pink lighten-1">ML</a>
+        
+            <a href="/tags/Adaboost/" class="chip pink lighten-1">Adaboost</a>
+        
+    </div>
+
+
+
+            
+                <div class="entry green-link-context">
+                    <ul>
+<li>作者：鲁力</li>
+<li>原文：<a href="https://github.com/datawhalechina/Daily-interview/tree/master/machine-learning" target="_blank" rel="noopener">https://github.com/datawhalechina/Daily-interview/tree/master/machine-learning</a>            </li>
+<li>联系方式：<a href="mailto:jieyuhuayang@foxmail.com" target="_blank" rel="noopener">jieyuhuayang@foxmail.com</a></li>
+</ul>
+<h2 id="1-Adaboost简介"><a href="#1-Adaboost简介" class="headerlink" title="1. Adaboost简介"></a>1. Adaboost简介</h2><h3 id="1-1-集成学习（ensemble-learning）背景介绍"><a href="#1-1-集成学习（ensemble-learning）背景介绍" class="headerlink" title="1.1 集成学习（ensemble learning）背景介绍"></a>1.1 集成学习（ensemble learning）背景介绍</h3><p>集成学习（ensemble learning）通过构建并结合多个学习器（learner）来完成学习任务，通常可获得比单一学习器更良好的泛化性能（特别是在集成弱学习器（weak learner）时）。  </p>
+<p>目前集成学习主要分为2大类：  </p>
+<p>一类是以bagging、Random Forest等算法为代表的，<strong>各个学习器之间相互独立、可同时生成</strong>的并行化方法；</p>
+<p>一类是以boosting、Adaboost等算法为代表的，<strong>个体学习器是串行序列化生成的、具有依赖关系</strong>，它试图不断增强单个学习器的学习能力。<br>
+                </p></div>
+            
+        </div>
+
+        
+        <div class="card-action green-link-context">
+            <a href="/2019/05/28/Adaboost/">阅读全文</a>
+        </div>
+        
+    </div>
+</article>
+
     
         <article class="simple-article">
     <div class="card">
@@ -620,72 +708,6 @@
         
         <div class="card-action green-link-context">
             <a href="/2019/04/20/第 4 周学习分享/">阅读全文</a>
-        </div>
-        
-    </div>
-</article>
-
-    
-        <article class="simple-article">
-    <div class="card">
-        <div class="card-content">
-            <div class="article-title">
-                
-    
-        <h1 class="-link-context"><a href="/2019/04/13/第 3 周学习分享/">YOLO &amp; Attention</a></h1>
-    
-
-
-            </div>
-            <div style="margin-top:10px;">
-    <span class="post-time">
-      <i class="fa fa-calendar"></i>
-      <time class="green-link-context" datetime="2019-04-13T03:11:00.000Z"><a href="/2019/04/13/第 3 周学习分享/">2019-04-13</a></time>
-
-      &nbsp; | &nbsp;
-    </span>
-
-    <span class="post-time">
-      <span class="post-meta-item-icon">
-        <i class="fa fa-keyboard-o"></i>
-        <span class="post-meta-item-text">  字数统计: </span>
-        <span class="post-count">556字</span>
-      </span>
-    </span>
-
-    <span class="post-time">
-      &nbsp; | &nbsp;
-      <span class="post-meta-item-icon">
-        <i class="fa fa-hourglass-half"></i>
-        <span class="post-meta-item-text">  阅读时长: </span>
-        <span class="post-count">2分</span>
-      </span>
-    </span>
-    
-</div>
-            
-    <div class="tags-row">
-        
-            <a href="/tags/deep-learning/" class="chip pink lighten-1">deep learning</a>
-        
-            <a href="/tags/YOLO/" class="chip pink lighten-1">YOLO</a>
-        
-            <a href="/tags/Attention/" class="chip pink lighten-1">Attention</a>
-        
-    </div>
-
-
-
-            
-                <div class="entry green-link-context">
-                    <p>这周准备了3场笔试，所以学习新知识的时间不多。主要将Andrew Ng的深度学习课程的最后一节序列模型和注意力机制学完了，同时回顾了一下前面学习的YOLO算法，下面做一个总结。。</p>
-                </div>
-            
-        </div>
-
-        
-        <div class="card-action green-link-context">
-            <a href="/2019/04/13/第 3 周学习分享/">阅读全文</a>
         </div>
         
     </div>
